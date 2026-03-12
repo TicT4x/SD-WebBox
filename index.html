@@ -865,6 +865,7 @@
             if (complexRoots && complexRoots.length > 0) {
                 let rootsHtml = '';
                 let skip = [];
+                let modeIndex = 1;
                 for(let i=0; i<complexRoots.length; i++) {
                     if(skip.includes(i)) continue;
                     let r = complexRoots[i];
@@ -872,19 +873,68 @@
                     for(let j=i+1; j<complexRoots.length; j++) {
                         if(!skip.includes(j) && Math.abs(r.re - complexRoots[j].re) < 1e-5 && Math.abs(r.im + complexRoots[j].im) < 1e-5 && r.im !== 0) {
                             skip.push(j);
-                            rootsHtml += `<div class="bg-blue-50 p-3 rounded border border-blue-100 font-mono text-sm text-center text-blue-800 font-semibold shadow-sm">
-                                &lambda;<sub>${i+1},${j+1}</sub> = ${r.re.toFixed(4)} &plusmn; ${Math.abs(r.im).toFixed(4)}j
-                            </div>`;
                             isPaired = true;
                             break;
                         }
                     }
-                    if(!isPaired) {
-                        let imStr = Math.abs(r.im) > 1e-5 ? (r.im > 0 ? ` + ${r.im.toFixed(4)}j` : ` - ${Math.abs(r.im).toFixed(4)}j`) : '';
-                        rootsHtml += `<div class="bg-blue-50 p-3 rounded border border-blue-100 font-mono text-sm text-center text-blue-800 font-semibold shadow-sm">
-                            &lambda;<sub>${i+1}</sub> = ${r.re.toFixed(4)}${imStr}
-                        </div>`;
+                    
+                    // Hilfsfunktion zur Formatierung komplexer Zahlen
+                    let formatCplx = (c) => {
+                        let reStr = c.re.toFixed(4);
+                        let imStr = Math.abs(c.im) < 1e-5 ? '' : (c.im > 0 ? ` + ${c.im.toFixed(4)}j` : ` - ${Math.abs(c.im).toFixed(4)}j`);
+                        return reStr + imStr;
+                    };
+
+                    let titleStr = isPaired ? `&lambda;<sub>${modeIndex},${modeIndex+1}</sub> = ${r.re.toFixed(4)} &plusmn; ${Math.abs(r.im).toFixed(4)}j` : `&lambda;<sub>${modeIndex}</sub> = ${formatCplx(r)}`;
+                    
+                    // Gedämpften komplexen Eigenvektor berechnen
+                    let evecHtml = '';
+                    if (sysDoF === 1) {
+                        evecHtml = `<div>1.0000</div>`;
+                    } else {
+                        let L = math.complex(r.re, r.im);
+                        let L2 = math.multiply(L, L);
+                        let M = sys.M; let C = sys.C; let K = sys.K;
+                        
+                        // D(lambda) = L^2*M + L*C + K
+                        let D11 = math.add(math.add(math.multiply(L2, M[0][0]), math.multiply(L, C[0][0])), K[0][0]);
+                        let D12 = math.add(math.add(math.multiply(L2, M[0][1]), math.multiply(L, C[0][1])), K[0][1]);
+                        let D21 = math.add(math.add(math.multiply(L2, M[1][0]), math.multiply(L, C[1][0])), K[1][0]);
+                        let D22 = math.add(math.add(math.multiply(L2, M[1][1]), math.multiply(L, C[1][1])), K[1][1]);
+
+                        let phi2;
+                        // Auswählen der numerisch stabileren Zeile zur Auflösung
+                        if (math.abs(D12) > math.abs(D22)) {
+                            phi2 = math.multiply(math.complex(-1, 0), math.divide(D11, D12));
+                        } else {
+                            if (math.abs(D22) < 1e-10) phi2 = math.complex(0,0);
+                            else phi2 = math.multiply(math.complex(-1, 0), math.divide(D21, D22));
+                        }
+                        let phi1 = math.complex(1, 0);
+
+                        // Normieren, sodass das betragsgrößte Element 1 + 0j wird
+                        if (math.abs(phi2) > math.abs(phi1)) {
+                            phi1 = math.divide(phi1, phi2);
+                            phi2 = math.complex(1, 0);
+                        }
+
+                        // Floating-Point Rauschen bereinigen (zeigt deutlich Caughey-Eigenschaften)
+                        if (math.abs(phi1.im) < 1e-5) phi1.im = 0;
+                        if (math.abs(phi2.im) < 1e-5) phi2.im = 0;
+
+                        evecHtml = `<div>${formatCplx(phi1)}</div><div>${formatCplx(phi2)}</div>`;
                     }
+
+                    rootsHtml += `
+                        <div class="bg-blue-50 p-3 rounded border border-blue-100 font-mono text-sm text-center text-blue-800 shadow-sm flex flex-col items-center">
+                            <span class="font-bold mb-2">${titleStr}</span>
+                            <span class="text-xs text-gray-500 font-sans mb-1">Gedämpfter Eigenvektor &Psi;<sub>${modeIndex}</sub>:</span>
+                            <div class="matrix-input text-center bg-white p-1 rounded w-full">
+                                ${evecHtml}
+                            </div>
+                        </div>
+                    `;
+                    modeIndex += isPaired ? 2 : 1;
                 }
                 document.getElementById('eigenvalues-list').innerHTML = rootsHtml;
                 plotEigenvalues(complexRoots);
