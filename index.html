@@ -61,6 +61,30 @@
                 <i data-lucide="radio"></i> Frequenzbereich
             </button>
         </nav>
+        
+        <!-- Preset Verwaltung -->
+        <div class="p-4 border-t border-slate-700">
+            <h3 class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Presets</h3>
+            <div class="flex gap-1 mb-2">
+                <select id="preset_select" class="flex-1 p-1.5 bg-slate-700 text-white rounded text-sm border border-slate-600 focus:ring-2 focus:ring-blue-500 w-full overflow-hidden text-ellipsis"></select>
+                <button onclick="loadPreset()" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1.5 rounded transition-colors" title="Ausgewähltes Preset anwenden">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-4 gap-1 mb-2">
+                <button onclick="savePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Neu speichern"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                <button onclick="overwritePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Aktuelles überschreiben"><i data-lucide="save" class="w-3.5 h-3.5"></i></button>
+                <button onclick="renamePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Umbenennen"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                <button onclick="deletePreset()" class="bg-slate-700 hover:bg-red-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Löschen"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
+            <!-- Import/Export File Area -->
+            <div class="grid grid-cols-2 gap-1">
+                <button onclick="exportPresets()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center items-center gap-1" title="In Datei exportieren"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export</button>
+                <button onclick="document.getElementById('import_file').click()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center items-center gap-1" title="Aus Datei importieren"><i data-lucide="folder-open" class="w-3.5 h-3.5"></i> Import</button>
+                <input type="file" id="import_file" class="hidden" accept=".json" onchange="importPresets(event)">
+            </div>
+        </div>
+
         <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
             Basierend auf Skriptmethoden (MDoF, Newmark, MAC).
         </div>
@@ -118,7 +142,6 @@
                         <select id="damping-type" onchange="toggleDampingType(); saveSystem();" class="text-sm font-semibold p-1 border rounded bg-gray-50 focus:ring-2 focus:ring-blue-500 text-center">
                             <option value="matrix">Dämpfungsmatrix [C]</option>
                             <option value="ratio">Modal über Dämpfungsmaß [&zeta;]</option>
-                            <!-- NEU: Rayleigh Dämpfung -->
                             <option value="rayleigh">Rayleigh-Dämpfung (&alpha;M + &beta;K)</option>
                         </select>
                         <span id="unit-c" class="text-xs text-gray-400 font-normal"></span>
@@ -135,7 +158,6 @@
                         </div>
                     </div>
 
-                    <!-- NEU: Rayleigh Inputs -->
                     <div id="rayleigh-inputs" class="hidden justify-center gap-4 mb-4 bg-blue-50 p-2 rounded-lg border border-blue-100 w-full">
                         <div>
                             <label class="block text-xs text-blue-700 font-semibold mb-1">&alpha; (Massenprop.)</label>
@@ -181,17 +203,34 @@
         <!-- Tab 2: Modalanalyse -->
         <div id="modal" class="tab-content max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Modalanalyse & Eigenwerte</h2>
-            <p class="mb-6 text-gray-600">Berechnung der Eigenfrequenzen, der zugehörigen Eigenvektoren und Überprüfung der Massenorthogonalität ($\Phi^T M \Phi = I$).</p>
+            
+            <!-- NEU: Toggle für Normierung -->
+            <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl flex items-center gap-4 mb-6 shadow-inner">
+                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i> Eigenvektor-Normierung:
+                </span>
+                <select id="evec_norm" onchange="calcModal()" class="p-1.5 border rounded focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+                    <option value="mass" selected>Massen-Normiert (&Phi;ᵀ M &Phi; = I)</option>
+                    <option value="unity">Unity-Normiert (Max. Komponente = 1)</option>
+                </select>
+            </div>
+
+            <p class="mb-6 text-gray-600">Berechnung der Eigenfrequenzen, der zugehörigen Eigenvektoren und Überprüfung der Massenorthogonalität.</p>
             
             <!-- Analytische Text-Ergebnisse -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="modal-results"></div>
             
             <!-- Modale Matrizen (Orthogonalitäts-Check) -->
-            <div id="modal-matrices-container" class="bg-gray-100 p-6 rounded-xl shadow-inner border border-gray-200 mb-8 hidden">
-                <h3 class="font-bold text-lg mb-4 text-slate-700 flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5"></i> Orthogonalitäts-Check (Modale Matrizen)</h3>
-                <p class="text-sm text-gray-600 mb-4">Nach der Entkopplungstheorie müssen die transformierten Matrizen auf der Nebendiagonale Null sein.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="modal-matrices-content">
-                    <!-- Gefüllt per JS -->
+            <div id="modal-matrices-container" class="bg-gray-100 rounded-xl shadow-inner border border-gray-200 mb-8 hidden overflow-hidden">
+                <button onclick="toggleSection('modal-matrices-content-wrapper', 'modal-matrices-icon')" class="w-full p-6 text-left font-bold text-lg text-slate-700 flex items-center justify-between hover:bg-gray-200 transition-colors">
+                    <span class="flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5"></i> Orthogonalitäts-Check (Modale Matrizen)</span>
+                    <i id="modal-matrices-icon" data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200"></i>
+                </button>
+                <div id="modal-matrices-content-wrapper" class="hidden px-6 pb-6">
+                    <p class="text-sm text-gray-600 mb-4">Nach der Entkopplungstheorie müssen die transformierten Matrizen auf der Nebendiagonale Null sein.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="modal-matrices-content">
+                        <!-- Gefüllt per JS -->
+                    </div>
                 </div>
             </div>
 
@@ -234,39 +273,89 @@
                 </div>
 
                 <!-- Dynamische Erreger-Inputs -->
-                <div id="ui_forced" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                    <div class="col-span-1 md:col-span-2">
-                        <label id="label-f1" class="block text-sm font-semibold text-blue-700 mb-1">Erregerlast DoF 1</label>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <input type="number" id="f1_amp" value="10" class="w-24 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Amp." title="Amplitude M0 bzw. F0">
-                            
-                            <select id="f1_func" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white font-medium text-sm shrink-0">
-                                <option value="sin">&middot; sin(</option>
-                                <option value="cos">&middot; cos(</option>
-                            </select>
+                <div id="ui_forced" class="grid grid-cols-1 gap-6 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label id="label-f1" class="block text-sm font-semibold text-blue-700 mb-1">Erregerlast DoF 1</label>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <input type="number" id="f1_amp" value="10" class="w-24 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Amp." title="Amplitude M0 bzw. F0">
+                                
+                                <select id="f1_func" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white font-medium text-sm shrink-0">
+                                    <option value="sin">&middot; sin(</option>
+                                    <option value="cos">&middot; cos(</option>
+                                </select>
 
-                            <input type="number" id="f1_freq" value="10" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&omega;" title="Kreisfrequenz &omega;">
-                            <span class="text-sm font-semibold">&middot;t +</span>
-                            
-                            <input type="number" id="f1_phase" value="0" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&varphi;" title="Phasenverschiebung in Grad (&deg;)">
-                            <span class="text-sm font-semibold">&deg;)</span>
+                                <input type="number" id="f1_freq" value="10" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&omega;" title="Kreisfrequenz &omega;">
+                                <span class="text-sm font-semibold">&middot;t +</span>
+                                
+                                <input type="number" id="f1_phase" value="0" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&varphi;" title="Phasenverschiebung in Grad (&deg;)">
+                                <span class="text-sm font-semibold">&deg;)</span>
+                            </div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Hinweis: Bei kinematischer Erregung ($\alpha_0$) das Ersatzmoment $M_{ersatz} \approx k_t \cdot \alpha_0$ eingeben!</p>
 
-                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mt-4 rounded-r-lg shadow-sm">
-                            <h4 class="text-sm font-bold text-blue-900 mb-2">Theoretische Vorabberechnung (DoF 1)</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div class="bg-white p-2 rounded border border-blue-100">
-                                    <span class="block text-xs text-blue-600 font-semibold mb-1">Statische Auslenkung x<sub>stat</sub></span>
-                                    <span id="val_x_stat" class="font-mono text-lg text-slate-800">0.0000</span>
-                                </div>
-                                <div class="bg-white p-2 rounded border border-blue-100">
-                                    <span class="block text-xs text-blue-600 font-semibold mb-1">Dyn. Amplitude x<sub>dyn</sub></span>
-                                    <span id="val_x_dyn" class="font-mono text-lg text-slate-800">0.0000</span>
-                                </div>
-                                <div class="bg-white p-2 rounded border border-blue-100">
-                                    <span class="block text-xs text-blue-600 font-semibold mb-1">Vergrößerungsfaktor V</span>
-                                    <span id="val_v_factor" class="font-mono text-lg font-bold text-blue-700">1.00</span>
+                        <div class="dof-2-only">
+                            <label id="label-f2" class="block text-sm font-semibold text-blue-700 mb-1">Erregerlast DoF 2</label>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <input type="number" id="f2_amp" value="0" class="w-24 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Amp." title="Amplitude M0 bzw. F0">
+                                
+                                <select id="f2_func" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white font-medium text-sm shrink-0">
+                                    <option value="sin">&middot; sin(</option>
+                                    <option value="cos">&middot; cos(</option>
+                                </select>
+
+                                <input type="number" id="f2_freq" value="10" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&omega;" title="Kreisfrequenz &omega;">
+                                <span class="text-sm font-semibold">&middot;t +</span>
+                                
+                                <input type="number" id="f2_phase" value="0" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&varphi;" title="Phasenverschiebung in Grad (&deg;)">
+                                <span class="text-sm font-semibold">&deg;)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-span-1">
+                        <p class="text-xs text-gray-500 mb-2">Hinweis: Bei kinematischer Erregung ($\alpha_0$) das Ersatzmoment $M_{ersatz} \approx k_t \cdot \alpha_0$ eingeben!</p>
+
+                        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg shadow-sm overflow-hidden mt-4">
+                            <button onclick="toggleSection('theory-calc-content', 'theory-calc-icon')" class="w-full p-4 text-left flex items-center justify-between text-blue-900 hover:bg-blue-100 transition-colors">
+                                <h4 class="text-sm font-bold">Theoretische Vorabberechnung (Stationäre Antwort)</h4>
+                                <i id="theory-calc-icon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                            </button>
+                            <div id="theory-calc-content" class="hidden px-4 pb-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h5 class="text-xs font-bold text-blue-800 mb-1">DoF 1</h5>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>stat,1</sub></span>
+                                                <span id="val_x_stat_1" class="font-mono text-sm text-slate-800">0.0000</span>
+                                            </div>
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>dyn,1</sub></span>
+                                                <span id="val_x_dyn_1" class="font-mono text-sm text-slate-800">0.0000</span>
+                                            </div>
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">V₁</span>
+                                                <span id="val_v_factor_1" class="font-mono text-sm font-bold text-blue-700">1.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="dof-2-only">
+                                        <h5 class="text-xs font-bold text-blue-800 mb-1">DoF 2</h5>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>stat,2</sub></span>
+                                                <span id="val_x_stat_2" class="font-mono text-sm text-slate-800">0.0000</span>
+                                            </div>
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>dyn,2</sub></span>
+                                                <span id="val_x_dyn_2" class="font-mono text-sm text-slate-800">0.0000</span>
+                                            </div>
+                                            <div class="bg-white p-2 rounded border border-blue-100">
+                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">V₂</span>
+                                                <span id="val_v_factor_2" class="font-mono text-sm font-bold text-blue-700">1.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -292,26 +381,31 @@
                 </div>
 
                 <!-- Anfangsbedingungen -->
-                <div class="border-t pt-4">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <i data-lucide="crosshair" class="w-4 h-4 text-gray-400"></i> Anfangsbedingungen bei t=0
-                    </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <div>
-                            <label id="lbl_x0_1" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 1 (0)</label>
-                            <input type="number" id="x0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                        </div>
-                        <div class="dof-2-only">
-                            <label id="lbl_x0_2" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 2 (0)</label>
-                            <input type="number" id="x0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                        </div>
-                        <div>
-                            <label id="lbl_v0_1" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 1 (0)</label>
-                            <input type="number" id="v0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                        </div>
-                        <div class="dof-2-only">
-                            <label id="lbl_v0_2" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 2 (0)</label>
-                            <input type="number" id="v0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                <div class="border-t pt-2">
+                    <button onclick="toggleSection('ic-content', 'ic-icon')" class="w-full py-2 text-left flex items-center justify-between text-gray-700 hover:text-blue-600 transition-colors">
+                        <h4 class="text-sm font-semibold flex items-center gap-2">
+                            <i data-lucide="crosshair" class="w-4 h-4 text-gray-400"></i> Anfangsbedingungen bei t=0
+                        </h4>
+                        <i id="ic-icon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
+                    </button>
+                    <div id="ic-content" class="hidden pb-2 pt-2">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                            <div>
+                                <label id="lbl_x0_1" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 1 (0)</label>
+                                <input type="number" id="x0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                            <div class="dof-2-only">
+                                <label id="lbl_x0_2" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 2 (0)</label>
+                                <input type="number" id="x0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                            <div>
+                                <label id="lbl_v0_1" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 1 (0)</label>
+                                <input type="number" id="v0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
+                            <div class="dof-2-only">
+                                <label id="lbl_v0_2" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 2 (0)</label>
+                                <input type="number" id="v0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -351,8 +445,45 @@
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
                 <canvas id="timeChart" height="100"></canvas>
+            </div>
+
+            <!-- System Animation (Nach unten verschoben) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="monitor-play" class="w-5 h-5 text-blue-600"></i> Live-Animation des Systems</h3>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-gray-600 font-semibold">Tempo:</span>
+                            <select id="anim-speed" class="p-1 border rounded bg-gray-50">
+                                <option value="0.25">0.25x</option>
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1.0x</option>
+                                <option value="2">2.0x</option>
+                                <option value="5">5.0x</option>
+                            </select>
+                        </div>
+                        <div class="bg-gray-100 rounded flex overflow-hidden border border-gray-200">
+                            <button onclick="toggleAnimation()" class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors" title="Play/Pause">
+                                <i id="anim-play-icon" data-lucide="play" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="stopAnimation()" class="px-3 py-1.5 hover:bg-gray-200 text-gray-700 transition-colors" title="Stop">
+                                <i data-lucide="square" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full bg-slate-50 border border-slate-200 rounded overflow-hidden flex justify-center mb-3">
+                    <canvas id="animCanvas" width="800" height="200" class="max-w-full"></canvas>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-mono text-gray-500 w-12" id="anim-time-label">0.00s</span>
+                    <input type="range" id="anim-slider" min="0" value="0" step="1" class="flex-1 accent-blue-600" oninput="onAnimSliderChange()">
+                    <span class="text-xs font-mono text-gray-500 w-12 text-right" id="anim-time-max">0.00s</span>
+                </div>
             </div>
         </div>
 
@@ -409,6 +540,24 @@
 
     </main>
 
+    <!-- Custom Modal für Eingaben -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded-lg p-6 w-80 shadow-2xl transform scale-100 transition-transform">
+            <h3 id="modal-title" class="text-lg font-bold mb-4 text-slate-800">Eingabe</h3>
+            <input type="text" id="modal-input" class="w-full p-2 border border-slate-300 rounded mb-4 focus:ring-2 focus:ring-blue-500 text-slate-800">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded font-medium">Abbrechen</button>
+                <button id="modal-submit" class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded font-medium">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Benachrichtigung -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-blue-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Nachricht</span>
+    </div>
+
     <script>
         lucide.createIcons();
 
@@ -424,6 +573,305 @@
         let phaseChartInst = null; 
         let eigenChartInst = null;
         let timeSimData = null;
+
+        // --- Helper für Collapse/Expand (Dropdowns) ---
+        function toggleSection(contentId, iconId) {
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                if (icon) icon.classList.remove('rotate-180');
+            }
+        }
+
+        // --- Tastatur-Navigation für FRF Graphen ---
+        let currentHoverIndexFRF = -1;
+
+        document.addEventListener('keydown', (e) => {
+            const activeTab = document.querySelector('.tab-content.active');
+            // Nur ausführen, wenn wir uns im FRF-Tab befinden und ein Graph aktiv ist
+            if (!activeTab || activeTab.id !== 'freq') return;
+            if (currentHoverIndexFRF === -1 || !freqChartInst || !phaseChartInst) return;
+
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                currentHoverIndexFRF = Math.min(currentHoverIndexFRF + 1, freqChartInst.data.labels.length - 1);
+                triggerCrossHover(currentHoverIndexFRF);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                currentHoverIndexFRF = Math.max(currentHoverIndexFRF - 1, 0);
+                triggerCrossHover(currentHoverIndexFRF);
+            }
+        });
+
+        // Simuliert den Hover für die Pfeiltasten-Steuerung in beiden Graphen synchron
+        function triggerCrossHover(idx) {
+            if (!freqChartInst || !phaseChartInst) return;
+            
+            const targetElsMag = freqChartInst.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
+            const targetElsPh = phaseChartInst.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
+            
+            freqChartInst.setActiveElements(targetElsMag);
+            phaseChartInst.setActiveElements(targetElsPh);
+            
+            const metaMag = freqChartInst.getDatasetMeta(0);
+            if (metaMag && metaMag.data[idx]) {
+                freqChartInst.tooltip.setActiveElements(targetElsMag, {x: metaMag.data[idx].x, y: metaMag.data[idx].y});
+            }
+            const metaPh = phaseChartInst.getDatasetMeta(0);
+            if (metaPh && metaPh.data[idx]) {
+                phaseChartInst.tooltip.setActiveElements(targetElsPh, {x: metaPh.data[idx].x, y: metaPh.data[idx].y});
+            }
+            
+            freqChartInst.update();
+            phaseChartInst.update();
+        }
+
+        // --- Preset State Management ---
+        let presets = [];
+        let modalCallback = null;
+        const STORAGE_KEY = 'sd_presets_v1';
+
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+            } catch (e) {
+                console.warn("LocalStorage nicht verfügbar", e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                if (data) return JSON.parse(data);
+            } catch (e) {
+                console.warn("LocalStorage konnte nicht gelesen werden", e);
+            }
+            return null;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => toast.classList.add('opacity-0'), 3000);
+        }
+
+        function openModal(title, defaultValue, callback) {
+            document.getElementById('modal-title').innerText = title;
+            const input = document.getElementById('modal-input');
+            input.value = defaultValue;
+            document.getElementById('custom-modal').classList.remove('hidden');
+            input.focus();
+            input.select();
+            modalCallback = callback;
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            modalCallback = null;
+        }
+
+        document.getElementById('modal-submit').onclick = () => {
+            if(modalCallback) modalCallback(document.getElementById('modal-input').value);
+            closeModal();
+        };
+
+        document.getElementById('modal-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') document.getElementById('modal-submit').click();
+        });
+
+        function getSystemState() {
+            const ids = [
+                'type_dof1', 'type_dof2',
+                'm11', 'm12', 'm21', 'm22',
+                'damping-type', 'zeta1', 'zeta2', 'rayleigh_a', 'rayleigh_b',
+                'c11', 'c12', 'c21', 'c22',
+                'k11', 'k12', 'k21', 'k22',
+                'evec_norm', // <-- Speichert die Normierung im Preset
+                'exc_type', 't_end', 'dt',
+                'f1_amp', 'f1_func', 'f1_freq', 'f1_phase',
+                'f2_amp', 'f2_func', 'f2_freq', 'f2_phase',
+                'param_eps', 'param_wp',
+                'x0_1', 'x0_2', 'v0_1', 'v0_2',
+                'w_max', 'dw', 'frf_type', 'frf_y_axis',
+                'chk_tot', 'chk_force', 'chk_forced', 'chk_free', 'chk_part', 'chk_hom'
+            ];
+            let state = { sysDoF: sysDoF };
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') state[id] = el.checked;
+                    else state[id] = el.value;
+                }
+            });
+            return state;
+        }
+
+        function applySystemState(state) {
+            if(!state) return;
+            
+            if(state.sysDoF) setDoF(state.sysDoF);
+
+            Object.keys(state).forEach(id => {
+                if(id === 'sysDoF') return;
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') el.checked = state[id];
+                    else el.value = state[id];
+                }
+            });
+
+            updateLabels();
+            toggleDampingType();
+            toggleExcitationUI();
+            saveSystem();
+
+            const activeTab = document.querySelector('.tab-content.active').id;
+            if(activeTab === 'modal') calcModal();
+            else if(activeTab === 'time') runNewmark();
+            else if(activeTab === 'freq') runFRF();
+        }
+
+        function updatePresetDropdown() {
+            const select = document.getElementById('preset_select');
+            select.innerHTML = '';
+            presets.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.innerText = p.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function initPresets() {
+            saveSystem();
+            const stored = loadFromLocalStorage();
+            if (stored && stored.length > 0) {
+                presets = stored;
+            } else {
+                presets.push({
+                    id: 'preset_' + Date.now(),
+                    name: 'Standard 2-DoF',
+                    state: getSystemState()
+                });
+                saveToLocalStorage();
+            }
+            updatePresetDropdown();
+            loadPreset();
+        }
+
+        function savePreset() {
+            openModal("Namen für neues Preset", "Mein System 1", (name) => {
+                if(name && name.trim()) {
+                    const id = 'preset_' + Date.now();
+                    presets.push({ id, name: name.trim(), state: getSystemState() });
+                    saveToLocalStorage();
+                    updatePresetDropdown();
+                    document.getElementById('preset_select').value = id;
+                    showToast("Preset gespeichert!");
+                }
+            });
+        }
+
+        function overwritePreset() {
+            const id = document.getElementById('preset_select').value;
+            const preset = presets.find(p => p.id === id);
+            if(preset) {
+                preset.state = getSystemState();
+                saveToLocalStorage();
+                showToast("Preset '" + preset.name + "' überschrieben!");
+            }
+        }
+
+        function renamePreset() {
+            const id = document.getElementById('preset_select').value;
+            const preset = presets.find(p => p.id === id);
+            if(preset) {
+                openModal("Preset umbenennen", preset.name, (newName) => {
+                    if(newName && newName.trim()) {
+                        preset.name = newName.trim();
+                        saveToLocalStorage();
+                        updatePresetDropdown();
+                        document.getElementById('preset_select').value = id;
+                        showToast("Preset umbenannt!");
+                    }
+                });
+            }
+        }
+
+        function loadPreset() {
+            const id = document.getElementById('preset_select').value;
+            const preset = presets.find(p => p.id === id);
+            if(preset) {
+                applySystemState(preset.state);
+                showToast("Preset angewendet: " + preset.name);
+            }
+        }
+
+        function deletePreset() {
+            if(presets.length <= 1) {
+                showToast("Das letzte Preset kann nicht gelöscht werden.");
+                return;
+            }
+            const id = document.getElementById('preset_select').value;
+            const index = presets.findIndex(p => p.id === id);
+            if(index > -1) {
+                const name = presets[index].name;
+                presets.splice(index, 1);
+                saveToLocalStorage();
+                updatePresetDropdown();
+                document.getElementById('preset_select').value = presets[0].id;
+                loadPreset();
+                showToast("Preset '" + name + "' gelöscht.");
+            }
+        }
+
+        function exportPresets() {
+            const dataStr = JSON.stringify(presets, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "sd_presets.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Presets als Datei exportiert!");
+        }
+
+        function importPresets(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        if (importedData.length > 0 && importedData[0].id && importedData[0].name && importedData[0].state) {
+                            presets = importedData; 
+                            saveToLocalStorage();
+                            updatePresetDropdown();
+                            loadPreset();
+                            showToast(importedData.length + " Presets erfolgreich importiert!");
+                        } else {
+                            showToast("Fehler: Ungültiges Dateiformat.");
+                        }
+                    } else {
+                        showToast("Fehler: Dateiformat ist kein Array.");
+                    }
+                } catch (err) {
+                    showToast("Fehler beim Parsen der JSON-Datei.");
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
 
         // --- UI Logic ---
         function switchTab(tabId) {
@@ -542,6 +990,8 @@
             if(sysDoF === 2) {
                 document.getElementById('lbl_x0_2').innerText = t2 === 'trans' ? "Pos. x₂(0) [m]" : "Winkel &varphi;₂(0) [rad]";
                 document.getElementById('lbl_v0_2').innerText = t2 === 'trans' ? "Geschw. v₂(0) [m/s]" : "Wink.Geschw. &omega;₂(0) [rad/s]";
+                const elF2 = document.getElementById('label-f2');
+                if(elF2) elF2.innerText = t2 === 'trans' ? "Erregerkraft F₂(t) [N]" : "Erregermoment M₂(t) [Nm]";
             }
         }
 
@@ -731,11 +1181,16 @@
             let htmlContent = '';
             let complexRoots = [];
             
+            const normType = document.getElementById('evec_norm') ? document.getElementById('evec_norm').value : 'mass';
+            let normLabel = normType === 'mass' ? 'Massennormierter' : 'Unity-normierter';
+
             document.getElementById('modal-matrices-container').classList.add('hidden');
 
             if (sysDoF === 1) {
                 const m = sys.M[0][0]; const c = sys.C[0][0]; const k = sys.K[0][0];
                 const wn = Math.sqrt(k / m); const fn = wn / (2 * Math.PI); const zeta = c / (2 * Math.sqrt(k * m));
+
+                let phi_val = normType === 'mass' ? 1 / Math.sqrt(m) : 1;
 
                 let D = c*c - 4*m*k;
                 if(D < 0) {
@@ -763,6 +1218,10 @@
                                 <p class="text-2xl font-mono font-semibold">${(zeta*100).toFixed(2)} %</p>
                             </div>
                         </div>
+                        <div class="mt-4 pt-4 border-t border-blue-100">
+                            <p class="text-xs text-gray-500 font-sans mb-1">${normLabel} Eigenvektor &Phi;₁:</p>
+                            <div class="matrix-input text-center font-mono bg-white p-1 rounded inline-block"><div>${phi_val.toFixed(4)}</div></div>
+                        </div>
                     </div>
                 `;
             } else {
@@ -783,12 +1242,23 @@
                     let p12 = -(K[0][0] - l1*M[0][0]) / (K[0][1] - l1*M[0][1] || 1e-10);
                     let p22 = -(K[0][0] - l2*M[0][0]) / (K[0][1] - l2*M[0][1] || 1e-10);
                     
-                    // Mass-Normalization for Orthogonality
                     let phi1 = [1, p12]; let phi2 = [1, p22];
-                    let m1 = phi1[0]*M[0][0]*phi1[0] + phi1[0]*M[0][1]*phi1[1] + phi1[1]*M[1][0]*phi1[0] + phi1[1]*M[1][1]*phi1[1];
-                    let m2 = phi2[0]*M[0][0]*phi2[0] + phi2[0]*M[0][1]*phi2[1] + phi2[1]*M[1][0]*phi2[0] + phi2[1]*M[1][1]*phi2[1];
-                    let mode1 = [phi1[0]/Math.sqrt(m1), phi1[1]/Math.sqrt(m1)];
-                    let mode2 = [phi2[0]/Math.sqrt(m2), phi2[1]/Math.sqrt(m2)];
+
+                    if (normType === 'unity') {
+                        if (Math.abs(phi1[1]) > Math.abs(phi1[0])) { phi1 = [phi1[0]/phi1[1], 1]; }
+                        if (Math.abs(phi2[1]) > Math.abs(phi2[0])) { phi2 = [phi2[0]/phi2[1], 1]; }
+                    }
+                    
+                    let mode1, mode2;
+                    if (normType === 'mass') {
+                        let m1 = phi1[0]*M[0][0]*phi1[0] + phi1[0]*M[0][1]*phi1[1] + phi1[1]*M[1][0]*phi1[0] + phi1[1]*M[1][1]*phi1[1];
+                        let m2 = phi2[0]*M[0][0]*phi2[0] + phi2[0]*M[0][1]*phi2[1] + phi2[1]*M[1][0]*phi2[0] + phi2[1]*M[1][1]*phi2[1];
+                        mode1 = [phi1[0]/Math.sqrt(m1), phi1[1]/Math.sqrt(m1)];
+                        mode2 = [phi2[0]/Math.sqrt(m2), phi2[1]/Math.sqrt(m2)];
+                    } else {
+                        mode1 = phi1;
+                        mode2 = phi2;
+                    }
 
                     htmlContent = `
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 border-t-4 border-t-blue-500">
@@ -797,7 +1267,7 @@
                                 <p class="text-gray-600 flex justify-between"><span>Eigenkreisfreq. (&omega;n₁):</span> <span class="font-mono font-semibold">${w1.toFixed(3)} rad/s</span></p>
                                 <p class="text-gray-600 flex justify-between"><span>Eigenfrequenz (fn₁):</span> <span class="font-mono font-semibold">${f1.toFixed(3)} Hz</span></p>
                             </div>
-                            <h4 class="text-xs font-semibold text-gray-500 mb-2">Massennormierter Eigenvektor &Phi;₁:</h4>
+                            <h4 class="text-xs font-semibold text-gray-500 mb-2">${normLabel} Eigenvektor &Phi;₁:</h4>
                             <div class="matrix-input text-center font-mono bg-gray-50 p-2 rounded w-full"><div>${mode1[0].toFixed(4)}</div><div>${mode1[1].toFixed(4)}</div></div>
                         </div>
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-emerald-100 border-t-4 border-t-emerald-500">
@@ -806,7 +1276,7 @@
                                 <p class="text-gray-600 flex justify-between"><span>Eigenkreisfreq. (&omega;n₂):</span> <span class="font-mono font-semibold">${w2.toFixed(3)} rad/s</span></p>
                                 <p class="text-gray-600 flex justify-between"><span>Eigenfrequenz (fn₂):</span> <span class="font-mono font-semibold">${f2.toFixed(3)} Hz</span></p>
                             </div>
-                            <h4 class="text-xs font-semibold text-gray-500 mb-2">Massennormierter Eigenvektor &Phi;₂:</h4>
+                            <h4 class="text-xs font-semibold text-gray-500 mb-2">${normLabel} Eigenvektor &Phi;₂:</h4>
                             <div class="matrix-input text-center font-mono bg-gray-50 p-2 rounded w-full"><div>${mode2[0].toFixed(4)}</div><div>${mode2[1].toFixed(4)}</div></div>
                         </div>
                     `;
@@ -825,10 +1295,10 @@
                             <h4 class="text-sm font-semibold text-gray-700 mb-2 text-center">Modale Masse &mu; = &Phi;<sup>T</sup> M &Phi;</h4>
                             <div class="matrix-input text-center font-mono bg-white p-3 rounded shadow-sm w-full">
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="${Math.abs(mu[0][0]-1)<1e-3 ? 'text-green-600 font-bold' : ''}">${mu[0][0].toFixed(4)}</div>
-                                    <div class="${Math.abs(mu[0][1])<1e-3 ? 'text-gray-400' : ''}">${mu[0][1].toFixed(4)}</div>
-                                    <div class="${Math.abs(mu[1][0])<1e-3 ? 'text-gray-400' : ''}">${mu[1][0].toFixed(4)}</div>
-                                    <div class="${Math.abs(mu[1][1]-1)<1e-3 ? 'text-green-600 font-bold' : ''}">${mu[1][1].toFixed(4)}</div>
+                                    <div class="${normType==='mass' && Math.abs(mu[0][0]-1)<1e-3 ? 'text-green-600 font-bold' : 'font-bold'}">${mu[0][0].toFixed(4)}</div>
+                                    <div class="${Math.abs(mu[0][1])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${mu[0][1].toFixed(4)}</div>
+                                    <div class="${Math.abs(mu[1][0])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${mu[1][0].toFixed(4)}</div>
+                                    <div class="${normType==='mass' && Math.abs(mu[1][1]-1)<1e-3 ? 'text-green-600 font-bold' : 'font-bold'}">${mu[1][1].toFixed(4)}</div>
                                 </div>
                             </div>
                         </div>
@@ -836,10 +1306,10 @@
                             <h4 class="text-sm font-semibold text-gray-700 mb-2 text-center">Modale Steifigkeit &kappa; = &Phi;<sup>T</sup> K &Phi;</h4>
                             <div class="matrix-input text-center font-mono bg-white p-3 rounded shadow-sm w-full">
                                 <div class="grid grid-cols-2 gap-4">
-                                    <div class="${Math.abs(kappa[0][0]-w1*w1)<1e-1 ? 'text-blue-600 font-bold' : ''}">${kappa[0][0].toFixed(2)}</div>
-                                    <div class="${Math.abs(kappa[0][1])<1e-3 ? 'text-gray-400' : ''}">${kappa[0][1].toFixed(2)}</div>
-                                    <div class="${Math.abs(kappa[1][0])<1e-3 ? 'text-gray-400' : ''}">${kappa[1][0].toFixed(2)}</div>
-                                    <div class="${Math.abs(kappa[1][1]-w2*w2)<1e-1 ? 'text-blue-600 font-bold' : ''}">${kappa[1][1].toFixed(2)}</div>
+                                    <div class="font-bold ${normType==='mass' ? 'text-blue-600' : ''}">${kappa[0][0].toFixed(2)}</div>
+                                    <div class="${Math.abs(kappa[0][1])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${kappa[0][1].toFixed(2)}</div>
+                                    <div class="${Math.abs(kappa[1][0])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${kappa[1][0].toFixed(2)}</div>
+                                    <div class="font-bold ${normType==='mass' ? 'text-blue-600' : ''}">${kappa[1][1].toFixed(2)}</div>
                                 </div>
                             </div>
                         </div>
@@ -878,7 +1348,6 @@
                         }
                     }
                     
-                    // Hilfsfunktion zur Formatierung komplexer Zahlen
                     let formatCplx = (c) => {
                         let reStr = c.re.toFixed(4);
                         let imStr = Math.abs(c.im) < 1e-5 ? '' : (c.im > 0 ? ` + ${c.im.toFixed(4)}j` : ` - ${Math.abs(c.im).toFixed(4)}j`);
@@ -887,23 +1356,22 @@
 
                     let titleStr = isPaired ? `&lambda;<sub>${modeIndex},${modeIndex+1}</sub> = ${r.re.toFixed(4)} &plusmn; ${Math.abs(r.im).toFixed(4)}j` : `&lambda;<sub>${modeIndex}</sub> = ${formatCplx(r)}`;
                     
-                    // Gedämpften komplexen Eigenvektor berechnen
                     let evecHtml = '';
                     if (sysDoF === 1) {
-                        evecHtml = `<div>1.0000</div>`;
+                        const m = sys.M[0][0];
+                        let phi_val = normType === 'mass' ? 1 / Math.sqrt(m) : 1;
+                        evecHtml = `<div>${phi_val.toFixed(4)}</div>`;
                     } else {
                         let L = math.complex(r.re, r.im);
                         let L2 = math.multiply(L, L);
                         let M = sys.M; let C = sys.C; let K = sys.K;
                         
-                        // D(lambda) = L^2*M + L*C + K
                         let D11 = math.add(math.add(math.multiply(L2, M[0][0]), math.multiply(L, C[0][0])), K[0][0]);
                         let D12 = math.add(math.add(math.multiply(L2, M[0][1]), math.multiply(L, C[0][1])), K[0][1]);
                         let D21 = math.add(math.add(math.multiply(L2, M[1][0]), math.multiply(L, C[1][0])), K[1][0]);
                         let D22 = math.add(math.add(math.multiply(L2, M[1][1]), math.multiply(L, C[1][1])), K[1][1]);
 
                         let phi2;
-                        // Auswählen der numerisch stabileren Zeile zur Auflösung
                         if (math.abs(D12) > math.abs(D22)) {
                             phi2 = math.multiply(math.complex(-1, 0), math.divide(D11, D12));
                         } else {
@@ -912,13 +1380,25 @@
                         }
                         let phi1 = math.complex(1, 0);
 
-                        // Normieren, sodass das betragsgrößte Element 1 + 0j wird
+                        // Im Unity-Fall auf die betragsgrößte Komponente 1 skalieren
                         if (math.abs(phi2) > math.abs(phi1)) {
                             phi1 = math.divide(phi1, phi2);
                             phi2 = math.complex(1, 0);
                         }
 
-                        // Floating-Point Rauschen bereinigen (zeigt deutlich Caughey-Eigenschaften)
+                        // Bei Massen-Normierung: Skalierung mit Modalmasse im physikalischen Raum (M)
+                        if (normType === 'mass') {
+                            let row1 = math.add(math.multiply(M[0][0], phi1), math.multiply(M[0][1], phi2));
+                            let row2 = math.add(math.multiply(M[1][0], phi1), math.multiply(M[1][1], phi2));
+                            
+                            // m_r = phi^T * M * phi
+                            let m_r = math.add(math.multiply(phi1, row1), math.multiply(phi2, row2));
+                            let sqrt_m_r = math.sqrt(m_r);
+                            
+                            phi1 = math.divide(phi1, sqrt_m_r);
+                            phi2 = math.divide(phi2, sqrt_m_r);
+                        }
+
                         if (math.abs(phi1.im) < 1e-5) phi1.im = 0;
                         if (math.abs(phi2.im) < 1e-5) phi2.im = 0;
 
@@ -928,7 +1408,7 @@
                     rootsHtml += `
                         <div class="bg-blue-50 p-3 rounded border border-blue-100 font-mono text-sm text-center text-blue-800 shadow-sm flex flex-col items-center">
                             <span class="font-bold mb-2">${titleStr}</span>
-                            <span class="text-xs text-gray-500 font-sans mb-1">Gedämpfter Eigenvektor &Psi;<sub>${modeIndex}</sub>:</span>
+                            <span class="text-xs text-gray-500 font-sans mb-1">${normLabel} ged. Eigenvektor &Psi;<sub>${modeIndex}</sub>:</span>
                             <div class="matrix-input text-center bg-white p-1 rounded w-full">
                                 ${evecHtml}
                             </div>
@@ -947,20 +1427,31 @@
         // --- Zeitbereich (Newmark-Beta) ---
         function runNewmark() {
             saveSystem();
-            const T = parseFloat(document.getElementById('t_end').value);
-            const dt = parseFloat(document.getElementById('dt').value);
+            let T = parseFloat(document.getElementById('t_end').value);
+            if (isNaN(T) || T <= 0) T = 5;
+            let dt = parseFloat(document.getElementById('dt').value);
+            if (isNaN(dt) || dt <= 0) dt = 0.01;
             const N = Math.floor(T / dt);
             
             const exc_type = document.getElementById('exc_type').value;
-            let f1_amp = 0, w = 0, eps = 0, wp = 0, phase_rad = 0;
-            let func_type = 'sin';
+            let f1_amp = 0, w1 = 0, phase1_rad = 0, eps = 0, wp = 0;
+            let f2_amp = 0, w2 = 0, phase2_rad = 0;
+            let func1 = 'sin', func2 = 'sin';
 
             if (exc_type === 'forced') {
                 f1_amp = parseFloat(document.getElementById('f1_amp').value) || 0;
-                func_type = document.getElementById('f1_func').value;
-                w = parseFloat(document.getElementById('f1_freq').value) || 0;
-                let phase_deg = parseFloat(document.getElementById('f1_phase').value) || 0;
-                phase_rad = phase_deg * Math.PI / 180; 
+                func1 = document.getElementById('f1_func').value;
+                w1 = parseFloat(document.getElementById('f1_freq').value) || 0;
+                let phase_deg1 = parseFloat(document.getElementById('f1_phase').value) || 0;
+                phase1_rad = phase_deg1 * Math.PI / 180; 
+
+                if (sysDoF === 2) {
+                    f2_amp = parseFloat(document.getElementById('f2_amp').value) || 0;
+                    func2 = document.getElementById('f2_func').value;
+                    w2 = parseFloat(document.getElementById('f2_freq').value) || 0;
+                    let phase_deg2 = parseFloat(document.getElementById('f2_phase').value) || 0;
+                    phase2_rad = phase_deg2 * Math.PI / 180; 
+                }
             } else if (exc_type === 'param') {
                 eps = parseFloat(document.getElementById('param_eps').value) || 0;
                 wp = parseFloat(document.getElementById('param_wp').value) || 0;
@@ -981,41 +1472,73 @@
             const C = math.matrix(sys.C);
             const K = math.matrix(sys.K);
 
-            let x1_re=0, x1_im=0, x2_re=0, x2_im=0;
+            let X1_amp_vec = sysDoF === 1 ? [math.complex(0,0)] : [math.complex(0,0), math.complex(0,0)];
+            let X2_amp_vec = sysDoF === 1 ? [math.complex(0,0)] : [math.complex(0,0), math.complex(0,0)];
+
             if (exc_type === 'forced') {
-                let Z = math.add(K, math.multiply(-w*w, M));
-                Z = math.add(Z, math.multiply(math.complex(0, w), C));
+                if (f1_amp !== 0) {
+                    let Z1 = math.add(K, math.multiply(-w1*w1, M));
+                    Z1 = math.add(Z1, math.multiply(math.complex(0, w1), C));
+                    let f1_cplx = math.complex(f1_amp * Math.cos(phase1_rad), f1_amp * Math.sin(phase1_rad));
+                    let F0_amp_vec1 = sysDoF === 1 ? [f1_cplx] : [f1_cplx, math.complex(0,0)];
+                    try {
+                        let X_amp1 = math.multiply(math.inv(Z1), F0_amp_vec1);
+                        X1_amp_vec = X_amp1.toArray ? X_amp1.toArray() : Array.from(X_amp1);
+                    } catch(e) {}
+                }
+
+                if (sysDoF === 2 && f2_amp !== 0) {
+                    let Z2 = math.add(K, math.multiply(-w2*w2, M));
+                    Z2 = math.add(Z2, math.multiply(math.complex(0, w2), C));
+                    let f2_cplx = math.complex(f2_amp * Math.cos(phase2_rad), f2_amp * Math.sin(phase2_rad));
+                    let F0_amp_vec2 = [math.complex(0,0), f2_cplx];
+                    try {
+                        let X_amp2 = math.multiply(math.inv(Z2), F0_amp_vec2);
+                        X2_amp_vec = X_amp2.toArray ? X_amp2.toArray() : Array.from(X_amp2);
+                    } catch(e) {}
+                }
+
+                let K_inv; try { K_inv = math.inv(K); } catch(e) { K_inv = math.matrix(sysDoF === 1 ? [[1]] : [[1,0],[0,1]]); }
+                let F_stat_vec = sysDoF === 1 ? [f1_amp] : [f1_amp, f2_amp];
+                let X_stat_vec = math.multiply(K_inv, F_stat_vec);
+                let X_stat_arr = X_stat_vec.toArray ? X_stat_vec.toArray() : Array.from(X_stat_vec);
                 
-                let f0_cplx = math.complex(f1_amp * Math.cos(phase_rad), f1_amp * Math.sin(phase_rad));
-                let F0_amp_vec = sysDoF === 1 ? [f0_cplx] : [f0_cplx, 0];
-                
-                try {
-                    let X_amp = math.multiply(math.inv(Z), F0_amp_vec);
-                    let X_arr = X_amp.toArray ? X_amp.toArray() : Array.from(X_amp);
-                    x1_re = X_arr[0].re !== undefined ? X_arr[0].re : X_arr[0];
-                    x1_im = X_arr[0].im !== undefined ? X_arr[0].im : 0;
-                    if (sysDoF===2) {
-                        x2_re = X_arr[1].re !== undefined ? X_arr[1].re : X_arr[1];
-                        x2_im = X_arr[1].im !== undefined ? X_arr[1].im : 0;
+                let x1_stat_val = math.abs(X_stat_arr[0]);
+                let x2_stat_val = sysDoF === 2 ? math.abs(X_stat_arr[1]) : 0;
+
+                let x1_amp_val = 0, x2_amp_val = 0;
+                if (sysDoF === 1) {
+                    x1_amp_val = math.abs(X1_amp_vec[0]);
+                } else {
+                    if (Math.abs(w1 - w2) < 1e-5) {
+                        x1_amp_val = math.abs(math.add(X1_amp_vec[0], X2_amp_vec[0]));
+                        x2_amp_val = math.abs(math.add(X1_amp_vec[1], X2_amp_vec[1]));
+                    } else {
+                        x1_amp_val = math.abs(X1_amp_vec[0]) + math.abs(X2_amp_vec[0]);
+                        x2_amp_val = math.abs(X1_amp_vec[1]) + math.abs(X2_amp_vec[1]);
                     }
+                }
+                
+                let v_factor_val_1 = x1_stat_val > 1e-10 ? (x1_amp_val / x1_stat_val) : 0;
+                
+                const unitL1 = document.getElementById('type_dof1').value === 'trans' ? 'm' : 'rad';
+                const elStat1 = document.getElementById('val_x_stat_1');
+                const elDyn1 = document.getElementById('val_x_dyn_1');
+                const elV1 = document.getElementById('val_v_factor_1');
+                if (elStat1) elStat1.innerText = x1_stat_val.toFixed(4) + ' ' + unitL1;
+                if (elDyn1) elDyn1.innerText = x1_amp_val.toFixed(4) + ' ' + unitL1;
+                if (elV1) elV1.innerText = v_factor_val_1.toFixed(2);
 
-                    let x1_amp_val = Math.sqrt(x1_re*x1_re + x1_im*x1_im);
-                    let K_inv = math.inv(K);
-                    let X_stat_vec = math.multiply(K_inv, sysDoF === 1 ? [f1_amp] : [f1_amp, 0]);
-                    let X_stat_arr = X_stat_vec.toArray ? X_stat_vec.toArray() : Array.from(X_stat_vec);
-                    let x1_stat_val = Math.abs(X_stat_arr[0]);
-                    
-                    let v_factor_val = x1_stat_val > 1e-10 ? (x1_amp_val / x1_stat_val) : 0;
-                    
-                    const unitL = document.getElementById('type_dof1').value === 'trans' ? 'm' : 'rad';
-                    const elStat = document.getElementById('val_x_stat');
-                    const elDyn = document.getElementById('val_x_dyn');
-                    const elV = document.getElementById('val_v_factor');
-                    if (elStat) elStat.innerText = x1_stat_val.toFixed(4) + ' ' + unitL;
-                    if (elDyn) elDyn.innerText = x1_amp_val.toFixed(4) + ' ' + unitL;
-                    if (elV) elV.innerText = v_factor_val.toFixed(2);
-
-                } catch(e) { /* Singulär */ }
+                if (sysDoF === 2) {
+                    let v_factor_val_2 = x2_stat_val > 1e-10 ? (x2_amp_val / x2_stat_val) : 0;
+                    const unitL2 = document.getElementById('type_dof2').value === 'trans' ? 'm' : 'rad';
+                    const elStat2 = document.getElementById('val_x_stat_2');
+                    const elDyn2 = document.getElementById('val_x_dyn_2');
+                    const elV2 = document.getElementById('val_v_factor_2');
+                    if (elStat2) elStat2.innerText = x2_stat_val.toFixed(4) + ' ' + unitL2;
+                    if (elDyn2) elDyn2.innerText = x2_amp_val.toFixed(4) + ' ' + unitL2;
+                    if (elV2) elV2.innerText = v_factor_val_2.toFixed(2);
+                }
             }
 
             const gamma = 0.5; const beta = 0.25;
@@ -1029,8 +1552,14 @@
             
             let force_at_0 = sysDoF === 1 ? [0] : [0, 0];
             if (exc_type === 'forced') {
-                let val_0 = func_type === 'sin' ? Math.sin(phase_rad) : Math.cos(phase_rad);
-                force_at_0 = sysDoF === 1 ? [f1_amp * val_0] : [f1_amp * val_0, 0];
+                let val1_0 = func1 === 'sin' ? Math.sin(phase1_rad) : Math.cos(phase1_rad);
+                let f1_0 = f1_amp * val1_0;
+                let f2_0 = 0;
+                if (sysDoF === 2) {
+                    let val2_0 = func2 === 'sin' ? Math.sin(phase2_rad) : Math.cos(phase2_rad);
+                    f2_0 = f2_amp * val2_0;
+                }
+                force_at_0 = sysDoF === 1 ? [f1_0] : [f1_0, f2_0];
             }
             
             let cv_tot = math.multiply(C, v_tot);
@@ -1053,17 +1582,21 @@
                 K_hat_inv_LTI = math.inv(K_hat_LTI);
             }
 
-            timeSimData = { t: [], f1: [], x1_tot: [], x1_part: [], x1_hom: [], x1_forced: [], x1_free: [], x2_tot: [], x2_part: [], x2_hom: [], x2_forced: [], x2_free: [] };
+            timeSimData = { t: [], f1: [], f2: [], x1_tot: [], x1_part: [], x1_hom: [], x1_forced: [], x1_free: [], x2_tot: [], x2_part: [], x2_hom: [], x2_forced: [], x2_free: [] };
 
             for(let i=0; i<=N; i++) {
                 let t = i * dt;
                 timeSimData.t.push(t);
                 
-                let current_f1 = 0;
+                let current_f1 = 0, current_f2 = 0;
                 if (exc_type === 'forced') {
-                    current_f1 = func_type === 'sin' ? f1_amp * Math.sin(w*t + phase_rad) : f1_amp * Math.cos(w*t + phase_rad);
+                    current_f1 = func1 === 'sin' ? f1_amp * Math.sin(w1*t + phase1_rad) : f1_amp * Math.cos(w1*t + phase1_rad);
+                    if (sysDoF === 2) {
+                        current_f2 = func2 === 'sin' ? f2_amp * Math.sin(w2*t + phase2_rad) : f2_amp * Math.cos(w2*t + phase2_rad);
+                    }
                 }
                 timeSimData.f1.push(current_f1);
+                if (sysDoF === 2) timeSimData.f2.push(current_f2);
 
                 let x1_total = x_tot[0]; let x2_total = sysDoF === 2 ? x_tot[1] : 0;
                 let x1_free_val = x_free[0]; let x2_free_val = sysDoF === 2 ? x_free[1] : 0;
@@ -1071,12 +1604,18 @@
                 let x1_p = 0, x2_p = 0;
                 
                 if (exc_type === 'forced') {
-                    if (func_type === 'sin') {
-                        x1_p = x1_re * Math.sin(w*t) + x1_im * Math.cos(w*t);
-                        x2_p = sysDoF === 2 ? (x2_re * Math.sin(w*t) + x2_im * Math.cos(w*t)) : 0;
-                    } else {
-                        x1_p = x1_re * Math.cos(w*t) - x1_im * Math.sin(w*t);
-                        x2_p = sysDoF === 2 ? (x2_re * Math.cos(w*t) - x2_im * Math.sin(w*t)) : 0;
+                    let get_p = (X, w, func) => {
+                        if (!X) return 0;
+                        let re = X.re !== undefined ? X.re : X;
+                        let im = X.im !== undefined ? X.im : 0;
+                        if (func === 'sin') return re * Math.sin(w*t) + im * Math.cos(w*t);
+                        else return re * Math.cos(w*t) - im * Math.sin(w*t);
+                    };
+                    
+                    x1_p = get_p(X1_amp_vec[0], w1, func1);
+                    if (sysDoF === 2) {
+                        x1_p += get_p(X2_amp_vec[0], w2, func2);
+                        x2_p = get_p(X1_amp_vec[1], w1, func1) + get_p(X2_amp_vec[1], w2, func2);
                     }
                 }
 
@@ -1098,8 +1637,14 @@
                 
                 let F_next = sysDoF === 1 ? [0] : [0, 0];
                 if (exc_type === 'forced') {
-                    let val_next = func_type === 'sin' ? Math.sin(w * t_next + phase_rad) : Math.cos(w * t_next + phase_rad);
-                    F_next = sysDoF === 1 ? [f1_amp * val_next] : [f1_amp * val_next, 0];
+                    let val1_next = func1 === 'sin' ? Math.sin(w1 * t_next + phase1_rad) : Math.cos(w1 * t_next + phase1_rad);
+                    let f1_next = f1_amp * val1_next;
+                    let f2_next = 0;
+                    if (sysDoF === 2) {
+                        let val2_next = func2 === 'sin' ? Math.sin(w2 * t_next + phase2_rad) : Math.cos(w2 * t_next + phase2_rad);
+                        f2_next = f2_amp * val2_next;
+                    }
+                    F_next = sysDoF === 1 ? [f1_next] : [f1_next, f2_next];
                 }
 
                 let K_hat_inv_current = K_hat_inv_LTI;
@@ -1147,10 +1692,11 @@
             }
 
             updateTimePlot();
+            initAnimation(); 
         }
 
         function updateTimePlot() {
-            if (!timeSimData) return;
+            if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
             
             const canvasEl = document.getElementById('timeChart');
             if (!canvasEl) return; 
@@ -1191,8 +1737,13 @@
             }
 
             if (showForce) {
-                const forceLbl = document.getElementById('type_dof1').value === 'trans' ? 'Erregerkraft F₁(t) [N]' : 'Erregermoment M₁(t) [Nm]';
-                datasets.push({ label: forceLbl, data: timeSimData.f1, borderColor: '#818cf8', borderDash: [2, 2], backgroundColor: 'rgba(129, 140, 248, 0.1)', fill: true, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
+                const forceLbl1 = document.getElementById('type_dof1').value === 'trans' ? 'Erregerkraft F₁(t) [N]' : 'Erregermoment M₁(t) [Nm]';
+                datasets.push({ label: forceLbl1, data: timeSimData.f1, borderColor: '#818cf8', borderDash: [2, 2], backgroundColor: 'rgba(129, 140, 248, 0.1)', fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
+                
+                if (sysDoF === 2) {
+                    const forceLbl2 = document.getElementById('type_dof2').value === 'trans' ? 'Erregerkraft F₂(t) [N]' : 'Erregermoment M₂(t) [Nm]';
+                    datasets.push({ label: forceLbl2, data: timeSimData.f2, borderColor: '#34d399', borderDash: [2, 2], backgroundColor: 'rgba(52, 211, 153, 0.1)', fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
+                }
             }
 
             timeChartInst = new Chart(ctx, {
@@ -1216,11 +1767,248 @@
             });
         }
 
+        // --- Animations Logik ---
+        let animReqId = null;
+        let animIsPlaying = false;
+        let animTimeIndex = 0;
+        let lastFrameTime = 0;
+        let animScale = 1;
+        let animParams = {};
+
+        function initAnimation() {
+            if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
+            
+            stopAnimation();
+            const slider = document.getElementById('anim-slider');
+            slider.max = timeSimData.t.length - 1;
+            slider.value = 0;
+            document.getElementById('anim-time-max').innerText = timeSimData.t[timeSimData.t.length - 1].toFixed(2) + "s";
+            
+            const K = sys.K; const C = sys.C;
+            if (sysDoF === 1) {
+                animParams = {
+                    k_left: K[0][0], c_left: C[0][0], k_mid: 0, c_mid: 0, k_right: 0, c_right: 0
+                };
+            } else {
+                let k_mid = -K[0][1]; let c_mid = -C[0][1];
+                animParams = {
+                    k_left: K[0][0] - k_mid, c_left: C[0][0] - c_mid,
+                    k_mid: k_mid, c_mid: c_mid,
+                    k_right: K[1][1] - k_mid, c_right: C[1][1] - c_mid
+                };
+            }
+
+            let maxDisp = 0;
+            timeSimData.x1_tot.forEach(v => maxDisp = Math.max(maxDisp, Math.abs(v)));
+            if (sysDoF === 2) timeSimData.x2_tot.forEach(v => maxDisp = Math.max(maxDisp, Math.abs(v)));
+            
+            animScale = maxDisp > 1e-8 ? 35.0 / maxDisp : 1; 
+
+            drawSystemFrame();
+        }
+
+        function toggleAnimation() {
+            if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
+            animIsPlaying = !animIsPlaying;
+            document.getElementById('anim-play-icon').setAttribute('data-lucide', animIsPlaying ? 'pause' : 'play');
+            lucide.createIcons();
+            
+            if(animIsPlaying) {
+                if (animTimeIndex >= timeSimData.t.length - 1) animTimeIndex = 0;
+                lastFrameTime = performance.now();
+                animReqId = requestAnimationFrame(animationLoop);
+            } else {
+                cancelAnimationFrame(animReqId);
+            }
+        }
+
+        function stopAnimation() {
+            animIsPlaying = false;
+            animTimeIndex = 0;
+            document.getElementById('anim-play-icon').setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+            if(animReqId) cancelAnimationFrame(animReqId);
+            const slider = document.getElementById('anim-slider');
+            if (slider) slider.value = 0;
+            if(timeSimData && timeSimData.t && timeSimData.t.length > 0) drawSystemFrame();
+        }
+
+        function onAnimSliderChange() {
+            animTimeIndex = parseFloat(document.getElementById('anim-slider').value);
+            if (isNaN(animTimeIndex)) animTimeIndex = 0;
+            drawSystemFrame();
+        }
+
+        function animationLoop(timestamp) {
+            if (!animIsPlaying || !timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
+
+            const speed = parseFloat(document.getElementById('anim-speed').value) || 1;
+            let dt_sim = timeSimData.t.length > 1 ? (timeSimData.t[1] - timeSimData.t[0]) : 0.01;
+            if (isNaN(dt_sim) || dt_sim <= 0) dt_sim = 0.01;
+            
+            const dt_real = (timestamp - lastFrameTime) / 1000.0;
+            const steps = (dt_real * speed) / dt_sim;
+            
+            animTimeIndex += steps;
+            if (isNaN(animTimeIndex)) animTimeIndex = 0;
+
+            if (animTimeIndex >= timeSimData.t.length - 1) {
+                animTimeIndex = timeSimData.t.length - 1;
+                toggleAnimation(); 
+            }
+
+            document.getElementById('anim-slider').value = Math.floor(animTimeIndex);
+            drawSystemFrame();
+
+            lastFrameTime = timestamp;
+            if (animIsPlaying) animReqId = requestAnimationFrame(animationLoop);
+        }
+
+        function drawSystemFrame() {
+            if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
+            const canvas = document.getElementById('animCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const yCenter = height / 2;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            let idx = Math.floor(animTimeIndex);
+            if (isNaN(idx) || !isFinite(idx) || idx < 0) idx = 0;
+            idx = Math.min(idx, timeSimData.t.length - 1);
+
+            // Bugfix: Sicherheitsabfrage falls der Index kurzzeitig undefined ist
+            let currentT = timeSimData.t[idx];
+            if (currentT === undefined) currentT = 0;
+            document.getElementById('anim-time-label').innerText = currentT.toFixed(2) + "s";
+
+            const type1 = document.getElementById('type_dof1').value;
+            const type2 = sysDoF === 2 ? document.getElementById('type_dof2').value : null;
+
+            // Bugfix: Sicherheitsabfrage für die Auslenkungs- und Kraftwerte
+            let x1_val = timeSimData.x1_tot[idx] || 0;
+            let x2_val = (sysDoF === 2 && timeSimData.x2_tot) ? (timeSimData.x2_tot[idx] || 0) : 0;
+            
+            let f1_val = (document.getElementById('chk_force').checked && timeSimData.f1) ? (timeSimData.f1[idx] || 0) : 0;
+            let f2_val = (document.getElementById('chk_force').checked && sysDoF === 2 && timeSimData.f2) ? (timeSimData.f2[idx] || 0) : 0;
+
+            const wallLeftX = 100;
+            const wallRightX = 700;
+            
+            let m1_baseX = sysDoF === 1 ? 400 : 300;
+            let m2_baseX = 500;
+
+            let p1_x = m1_baseX + (type1 === 'trans' ? x1_val * animScale : 0);
+            let p2_x = m2_baseX + (type2 === 'trans' ? x2_val * animScale : 0);
+            
+            let angle1 = type1 === 'rot' ? x1_val * animScale * (Math.PI/180) * 100 : 0; 
+            let angle2 = type2 === 'rot' ? x2_val * animScale * (Math.PI/180) * 100 : 0;
+
+            const boxW = 50, boxH = 50;
+
+            const drawSpring = (xStart, xEnd, y, active) => {
+                if(Math.abs(active) < 1e-5) return;
+                ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+                const len = xEnd - xStart; const coils = 6; const step = len / coils;
+                ctx.moveTo(xStart, y);
+                for(let i=0; i<=coils; i++) {
+                    if(i===0) ctx.lineTo(xStart + step*0.2, y);
+                    else if(i===coils) ctx.lineTo(xEnd, y);
+                    else {
+                        ctx.lineTo(xStart + step*(i-0.5), y - 15);
+                        ctx.lineTo(xStart + step*i, y + 15);
+                    }
+                }
+                ctx.stroke();
+            };
+
+            const drawDamper = (xStart, xEnd, y, active) => {
+                if(Math.abs(active) < 1e-5) return;
+                ctx.beginPath(); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
+                const mid = xStart + (xEnd - xStart)/2;
+                ctx.moveTo(xStart, y); ctx.lineTo(mid - 15, y); 
+                ctx.moveTo(mid - 15, y - 10); ctx.lineTo(mid - 15, y + 10); 
+                ctx.lineTo(mid + 15, y + 10); 
+                ctx.moveTo(mid - 15, y - 10); ctx.lineTo(mid + 15, y - 10); 
+                ctx.moveTo(xEnd, y); ctx.lineTo(mid, y); 
+                ctx.moveTo(mid, y - 8); ctx.lineTo(mid, y + 8); 
+                ctx.stroke();
+            };
+
+            const drawTransMass = (x, y, label, forceVal) => {
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x - boxW/2, y - boxH/2, boxW, boxH);
+                ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(label, x, y);
+                if (Math.abs(forceVal) > 1e-5) {
+                    const dir = forceVal > 0 ? 1 : -1;
+                    ctx.beginPath(); ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+                    ctx.moveTo(x, y - boxH/2 - 10); ctx.lineTo(x + dir*30, y - boxH/2 - 10);
+                    ctx.lineTo(x + dir*30 - dir*8, y - boxH/2 - 15);
+                    ctx.moveTo(x + dir*30, y - boxH/2 - 10); ctx.lineTo(x + dir*30 - dir*8, y - boxH/2 - 5);
+                    ctx.stroke();
+                }
+            };
+
+            const drawRotMass = (x, y, angle, label, forceVal) => {
+                ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.arc(x, y, 30, 0, 2*Math.PI); ctx.fill();
+                ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 4; ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 30*Math.cos(angle), y + 30*Math.sin(angle)); ctx.stroke();
+                ctx.fillStyle = '#1e293b'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(label, x, y - 45);
+                if (Math.abs(forceVal) > 1e-5) {
+                    const dir = forceVal > 0 ? 1 : -1;
+                    ctx.beginPath(); ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+                    ctx.arc(x, y, 40, -Math.PI/4, -Math.PI/4 + dir*Math.PI/2, forceVal < 0);
+                    ctx.stroke();
+                }
+            };
+
+            const drawWall = (x, y, isRight) => {
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(isRight ? x : x-10, y - 40, 10, 80);
+                ctx.beginPath(); ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1;
+                for(let i=-40; i<40; i+=10) { ctx.moveTo(x, y+i); ctx.lineTo(isRight ? x+10 : x-10, y+i+10); }
+                ctx.stroke();
+            };
+
+            if (animParams.k_left > 1e-5 || animParams.c_left > 1e-5) drawWall(wallLeftX, yCenter, false);
+            if (sysDoF === 2 && (animParams.k_right > 1e-5 || animParams.c_right > 1e-5)) drawWall(wallRightX, yCenter, true);
+            else if (sysDoF === 1 && (animParams.k_right > 1e-5 || animParams.c_right > 1e-5)) drawWall(wallRightX, yCenter, true); 
+
+            if (animParams.k_left > 1e-5) drawSpring(wallLeftX, p1_x - (type1==='trans'?boxW/2:30), yCenter - 15, animParams.k_left);
+            if (animParams.c_left > 1e-5) drawDamper(wallLeftX, p1_x - (type1==='trans'?boxW/2:30), yCenter + 15, animParams.c_left);
+
+            if (sysDoF === 2) {
+                if (animParams.k_mid > 1e-5) drawSpring(p1_x + (type1==='trans'?boxW/2:30), p2_x - (type2==='trans'?boxW/2:30), yCenter - 15, animParams.k_mid);
+                if (animParams.c_mid > 1e-5) drawDamper(p1_x + (type1==='trans'?boxW/2:30), p2_x - (type2==='trans'?boxW/2:30), yCenter + 15, animParams.c_mid);
+            }
+
+            if (sysDoF === 2) {
+                if (animParams.k_right > 1e-5) drawSpring(p2_x + (type2==='trans'?boxW/2:30), wallRightX, yCenter - 15, animParams.k_right);
+                if (animParams.c_right > 1e-5) drawDamper(p2_x + (type2==='trans'?boxW/2:30), wallRightX, yCenter + 15, animParams.c_right);
+            } else {
+                if (animParams.k_right > 1e-5) drawSpring(p1_x + (type1==='trans'?boxW/2:30), wallRightX, yCenter - 15, animParams.k_right);
+                if (animParams.c_right > 1e-5) drawDamper(p1_x + (type1==='trans'?boxW/2:30), wallRightX, yCenter + 15, animParams.c_right);
+            }
+
+            if (type1 === 'trans') drawTransMass(p1_x, yCenter, 'm₁', f1_val);
+            else drawRotMass(p1_x, yCenter, angle1, 'J₁', f1_val);
+
+            if (sysDoF === 2) {
+                if (type2 === 'trans') drawTransMass(p2_x, yCenter, 'm₂', f2_val);
+                else drawRotMass(p2_x, yCenter, angle2, 'J₂', f2_val);
+            }
+        }
+
         // --- Frequenzbereich (FRF) ---
         function runFRF() {
             saveSystem();
-            const w_max = parseFloat(document.getElementById('w_max').value);
-            const dw = parseFloat(document.getElementById('dw').value);
+            let w_max = parseFloat(document.getElementById('w_max').value);
+            if (isNaN(w_max) || w_max <= 0) w_max = 30;
+            let dw = parseFloat(document.getElementById('dw').value);
+            if (isNaN(dw) || dw <= 0) dw = 0.1;
+            
             const y_axis_type = document.getElementById('frf_y_axis').value;
             const frf_type = document.getElementById('frf_type').value; 
             
@@ -1228,7 +2016,6 @@
             const C_complex = math.multiply(math.complex(0, 1), math.matrix(sys.C));
             const K = math.matrix(sys.K);
 
-            // Statische Nachgiebigkeit H(0) = K^-1 für Vergrößerungsfaktor V
             let H_stat;
             try { H_stat = math.inv(K); } catch(e) { H_stat = null; }
             let h11_stat = H_stat ? math.abs(H_stat.get([0, 0])) : 1;
@@ -1244,16 +2031,13 @@
                 try {
                     let H = math.inv(Z);
                     
-                    // DoF 11
                     let val11 = H.get([0, 0]);
                     
-                    // FRF Transformationen anwenden
                     if (frf_type === 'mobility') {
                         val11 = math.multiply(val11, math.complex(0, w));
                     } else if (frf_type === 'accelerance') {
                         val11 = math.multiply(val11, -w*w);
                     } else if (frf_type === 'transmissibility') {
-                        // T = (K + iwC) * H
                         let Z_sup1 = math.complex(sys.K[0][0], w * sys.C[0][0]);
                         val11 = math.multiply(val11, Z_sup1);
                     }
@@ -1267,11 +2051,9 @@
 
                     h11_ph.push(ph11);
 
-                    // DoF 21
                     if (sysDoF === 2) { 
                         let val21 = H.get([1, 0]);
                         
-                        // FRF Transformationen anwenden
                         if (frf_type === 'mobility') {
                             val21 = math.multiply(val21, math.complex(0, w));
                         } else if (frf_type === 'accelerance') {
@@ -1296,7 +2078,6 @@
                 }
             }
 
-            // Phase Unwrapping
             function unwrapPhase(arr) {
                 let res = [];
                 if(arr.length === 0) return res;
@@ -1330,7 +2111,6 @@
             if(freqChartInst) freqChartInst.destroy();
             if(phaseChartInst) phaseChartInst.destroy();
 
-            // Labels für Amplitude
             let yTitle = 'Amplitude';
             let label11 = '|H₁₁| (Receptance)', label21 = '|H₂₁|';
             
@@ -1345,13 +2125,64 @@
             let datasetsMag = [{ label: label11, data: h11_y, borderColor: '#2563eb', tension: 0.1, pointRadius: 0 }];
             if (sysDoF === 2) datasetsMag.push({ label: label21, data: h21_y, borderColor: '#059669', tension: 0.1, pointRadius: 0 });
 
+            const syncHover = (e, activeElements, targetChart) => {
+                if (!targetChart) return;
+                if (activeElements.length > 0) {
+                    const idx = activeElements[0].index;
+                    currentHoverIndexFRF = idx; // Index für Tastatursteuerung speichern
+                    const targetEls = targetChart.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
+                    targetChart.setActiveElements(targetEls);
+                    const meta = targetChart.getDatasetMeta(0);
+                    if (meta && meta.data[idx]) {
+                        targetChart.tooltip.setActiveElements(targetEls, {x: meta.data[idx].x, y: meta.data[idx].y});
+                    }
+                    targetChart.update();
+                } else {
+                    targetChart.setActiveElements([]);
+                    targetChart.tooltip.setActiveElements([], {x: 0, y: 0});
+                    targetChart.update();
+                }
+            };
+
+            const syncLegendClick = (e, legendItem, legend, partnerChart) => {
+                const index = legendItem.datasetIndex;
+                const ci = legend.chart;
+                
+                if (ci.isDatasetVisible(index)) {
+                    ci.hide(index);
+                    partnerChart.hide(index);
+                } else {
+                    ci.show(index);
+                    partnerChart.show(index); 
+                }
+                
+                ci.update();
+                partnerChart.update();
+            };
+
             freqChartInst = new Chart(ctxFreq, {
                 type: 'line',
-                data: { labels: w.map(val => val.toFixed(1)), datasets: datasetsMag },
+                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsMag }, // Genaue Frequenz speichern
                 options: {
                     responsive: true,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { title: { display: true, text: 'Amplitudengang' }, legend: { position: 'top' } },
+                    onHover: (e, activeElements) => syncHover(e, activeElements, phaseChartInst), 
+                    plugins: { 
+                        title: { display: true, text: 'Amplitudengang' }, 
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return 'ω = ' + tooltipItems[0].label + ' rad/s'; // Präzises Tooltip-Label
+                                }
+                            }
+                        },
+                        legend: { 
+                            position: 'top',
+                            onClick: function(e, legendItem, legend) {
+                                syncLegendClick(e, legendItem, legend, phaseChartInst);
+                            }
+                        } 
+                    },
                     scales: {
                         x: { display: false }, 
                         y: { title: { display: true, text: yTitle } }
@@ -1359,19 +2190,43 @@
                 }
             });
 
-            // Graph für Phase
             let datasetsPhase = [{ label: 'Phase φ₁₁', data: h11_ph, borderColor: '#2563eb', borderDash: [2,2], tension: 0.1, pointRadius: 0 }];
             if (sysDoF === 2) datasetsPhase.push({ label: 'Phase φ₂₁', data: h21_ph, borderColor: '#059669', borderDash: [2,2], tension: 0.1, pointRadius: 0 });
 
             phaseChartInst = new Chart(ctxPhase, {
                 type: 'line',
-                data: { labels: w.map(val => val.toFixed(1)), datasets: datasetsPhase },
+                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsPhase }, // Genaue Frequenz speichern
                 options: {
                     responsive: true,
                     interaction: { mode: 'index', intersect: false },
-                    plugins: { title: { display: false }, legend: { display: false } },
+                    onHover: (e, activeElements) => syncHover(e, activeElements, freqChartInst), 
+                    plugins: { 
+                        title: { display: false }, 
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return 'ω = ' + tooltipItems[0].label + ' rad/s'; // Präzises Tooltip-Label
+                                }
+                            }
+                        },
+                        legend: { 
+                            display: true, 
+                            position: 'bottom',
+                            onClick: function(e, legendItem, legend) {
+                                syncLegendClick(e, legendItem, legend, freqChartInst);
+                            }
+                        } 
+                    },
                     scales: {
-                        x: { title: { display: true, text: 'Kreisfrequenz ω (rad/s)' } },
+                        x: { 
+                            title: { display: true, text: 'Kreisfrequenz ω (rad/s)' },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    // X-Achse zur Übersichtlichkeit auf 1 Nachkommastelle formatieren
+                                    return Number(this.getLabelForValue(value)).toFixed(1);
+                                }
+                            }
+                        },
                         y: { title: { display: true, text: 'Phasenwinkel φ (°)' } }
                     }
                 }
@@ -1381,7 +2236,7 @@
         // Init
         toggleDampingType();
         toggleExcitationUI();
-        setDoF(2);
+        initPresets(); 
     </script>
 </body>
 </html>
