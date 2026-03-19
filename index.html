@@ -60,6 +60,10 @@
             <button onclick="switchTab('freq')" id="btn-freq" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                 <i data-lucide="radio"></i> Frequenzbereich
             </button>
+            <!-- NEU: Tilger Tab Button -->
+            <button onclick="switchTab('absorber')" id="btn-absorber" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors mt-4 border-t border-slate-600 pt-4">
+                <i data-lucide="magnet"></i> Schwingungstilger
+            </button>
         </nav>
         
         <!-- Preset Verwaltung -->
@@ -86,7 +90,7 @@
         </div>
 
         <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
-            Basierend auf Skriptmethoden (MDoF, Newmark, MAC).
+            Basierend auf Skriptmethoden (MDoF, Newmark, Tilger).
         </div>
     </aside>
 
@@ -204,7 +208,6 @@
         <div id="modal" class="tab-content max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Modalanalyse & Eigenwerte</h2>
             
-            <!-- NEU: Toggle für Normierung -->
             <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl flex items-center gap-4 mb-6 shadow-inner">
                 <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                     <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i> Eigenvektor-Normierung:
@@ -217,10 +220,8 @@
 
             <p class="mb-6 text-gray-600">Berechnung der Eigenfrequenzen, der zugehörigen Eigenvektoren und Überprüfung der Massenorthogonalität.</p>
             
-            <!-- Analytische Text-Ergebnisse -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="modal-results"></div>
             
-            <!-- Modale Matrizen (Orthogonalitäts-Check) -->
             <div id="modal-matrices-container" class="bg-gray-100 rounded-xl shadow-inner border border-gray-200 mb-8 hidden overflow-hidden">
                 <button onclick="toggleSection('modal-matrices-content-wrapper', 'modal-matrices-icon')" class="w-full p-6 text-left font-bold text-lg text-slate-700 flex items-center justify-between hover:bg-gray-200 transition-colors">
                     <span class="flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5"></i> Orthogonalitäts-Check (Modale Matrizen)</span>
@@ -228,18 +229,14 @@
                 </button>
                 <div id="modal-matrices-content-wrapper" class="hidden px-6 pb-6">
                     <p class="text-sm text-gray-600 mb-4">Nach der Entkopplungstheorie müssen die transformierten Matrizen auf der Nebendiagonale Null sein.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="modal-matrices-content">
-                        <!-- Gefüllt per JS -->
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="modal-matrices-content"></div>
                 </div>
             </div>
 
-            <!-- Eigenwerte und Diagramm -->
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="flex items-center gap-2 mb-4">
                     <h3 class="font-bold text-xl text-slate-800">Komplexe Eigenwerte (Polstellen in der s-Ebene)</h3>
                 </div>
-                <!-- Hier werden die numerischen Eigenwerte eingefügt -->
                 <div id="eigenvalues-list" class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 <div class="w-full">
                     <canvas id="eigenChart" height="120"></canvas>
@@ -487,6 +484,73 @@
             </div>
         </div>
 
+        <!-- NEU: Schwingungstilger Tab -->
+        <div id="absorber" class="tab-content max-w-5xl mx-auto">
+            <div class="flex justify-between items-end border-b pb-2 mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">Schwingungstilger (Vibration Absorber)</h2>
+            </div>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <p class="text-sm text-blue-800">Untersuche die Wirkung eines Tilgers (Sekundärmasse) auf das Hauptsystem (Primärmasse). Verändere die Werte live, um zu sehen, wie sich der Amplitudengang ($V_1$) der Primärmasse verändert. F<sub>0</sub> greift an Masse 1 an.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Control Panel -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-6">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-semibold text-gray-700">Massenverh. &mu; = m₂/m₁</label>
+                            <span id="lbl_abs_mu" class="text-sm font-mono font-bold text-blue-600">0.100</span>
+                        </div>
+                        <input type="range" id="abs_mu" min="0.01" max="0.5" step="0.01" value="0.1" class="w-full accent-blue-600" oninput="runAbsorber()">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-semibold text-gray-700" title="Tuning Ratio ω₂/ω₁">Frequenzverh. &alpha; (bzw. &beta;)</label>
+                            <span id="lbl_abs_beta" class="text-sm font-mono font-bold text-blue-600">1.000</span>
+                        </div>
+                        <input type="range" id="abs_beta" min="0.5" max="1.5" step="0.01" value="1.0" class="w-full accent-blue-600" oninput="runAbsorber()">
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-semibold text-gray-700">Tilgerdämpfung &zeta;₂</label>
+                            <span id="lbl_abs_z2" class="text-sm font-mono font-bold text-blue-600">0.000</span>
+                        </div>
+                        <input type="range" id="abs_z2" min="0.0" max="0.5" step="0.01" value="0.0" class="w-full accent-blue-600" oninput="runAbsorber()">
+                        <p class="text-[10px] text-gray-400 mt-1">0 = Ungedämpft, &gt;0 = Gedämpfter Tilger</p>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <div class="flex justify-between mb-1">
+                            <label class="text-sm font-semibold text-gray-500">Systemdämpfung &zeta;₁</label>
+                            <span id="lbl_abs_z1" class="text-sm font-mono font-bold text-gray-600">0.020</span>
+                        </div>
+                        <input type="range" id="abs_z1" min="0.0" max="0.2" step="0.01" value="0.02" class="w-full accent-gray-500" oninput="runAbsorber()">
+                    </div>
+                    
+                    <div class="mt-auto pt-4 flex flex-col gap-2">
+                        <button onclick="applyDenHartog()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Den-Hartog Optimierung
+                        </button>
+                        <button onclick="transferAbsorberToMain()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="arrow-up-right" class="w-4 h-4"></i> In Systemdefinition laden
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Graphen -->
+                <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-md font-bold text-slate-800">Vergrößerungsfaktor (V₁) der Primärmasse</h3>
+                        <label class="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer hover:text-green-600">
+                            <input type="checkbox" id="chk_abs_x2" onchange="runAbsorber()" class="rounded text-green-600 focus:ring-green-500"> Auch Tilgermasse (V₂) anzeigen
+                        </label>
+                    </div>
+                    <div class="flex-1 w-full min-h-[300px]">
+                        <canvas id="absorberChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tab 4: Frequenzbereich -->
         <div id="freq" class="tab-content max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Frequenzgang (FRF)</h2>
@@ -572,6 +636,7 @@
         let freqChartInst = null;
         let phaseChartInst = null; 
         let eigenChartInst = null;
+        let absorberChartInst = null; // NEU
         let timeSimData = null;
 
         // --- Helper für Collapse/Expand (Dropdowns) ---
@@ -592,7 +657,6 @@
 
         document.addEventListener('keydown', (e) => {
             const activeTab = document.querySelector('.tab-content.active');
-            // Nur ausführen, wenn wir uns im FRF-Tab befinden und ein Graph aktiv ist
             if (!activeTab || activeTab.id !== 'freq') return;
             if (currentHoverIndexFRF === -1 || !freqChartInst || !phaseChartInst) return;
 
@@ -607,7 +671,6 @@
             }
         });
 
-        // Simuliert den Hover für die Pfeiltasten-Steuerung in beiden Graphen synchron
         function triggerCrossHover(idx) {
             if (!freqChartInst || !phaseChartInst) return;
             
@@ -636,20 +699,14 @@
         const STORAGE_KEY = 'sd_presets_v1';
 
         function saveToLocalStorage() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
-            } catch (e) {
-                console.warn("LocalStorage nicht verfügbar", e);
-            }
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(presets)); } catch (e) { }
         }
 
         function loadFromLocalStorage() {
             try {
                 const data = localStorage.getItem(STORAGE_KEY);
                 if (data) return JSON.parse(data);
-            } catch (e) {
-                console.warn("LocalStorage konnte nicht gelesen werden", e);
-            }
+            } catch (e) { }
             return null;
         }
 
@@ -691,14 +748,15 @@
                 'damping-type', 'zeta1', 'zeta2', 'rayleigh_a', 'rayleigh_b',
                 'c11', 'c12', 'c21', 'c22',
                 'k11', 'k12', 'k21', 'k22',
-                'evec_norm', // <-- Speichert die Normierung im Preset
+                'evec_norm',
                 'exc_type', 't_end', 'dt',
                 'f1_amp', 'f1_func', 'f1_freq', 'f1_phase',
                 'f2_amp', 'f2_func', 'f2_freq', 'f2_phase',
                 'param_eps', 'param_wp',
                 'x0_1', 'x0_2', 'v0_1', 'v0_2',
                 'w_max', 'dw', 'frf_type', 'frf_y_axis',
-                'chk_tot', 'chk_force', 'chk_forced', 'chk_free', 'chk_part', 'chk_hom'
+                'chk_tot', 'chk_force', 'chk_forced', 'chk_free', 'chk_part', 'chk_hom',
+                'abs_mu', 'abs_beta', 'abs_z2', 'abs_z1', 'chk_abs_x2' // NEU: Absorber Params
             ];
             let state = { sysDoF: sysDoF };
             ids.forEach(id => {
@@ -734,6 +792,7 @@
             if(activeTab === 'modal') calcModal();
             else if(activeTab === 'time') runNewmark();
             else if(activeTab === 'freq') runFRF();
+            else if(activeTab === 'absorber') runAbsorber(); // NEU
         }
 
         function updatePresetDropdown() {
@@ -847,27 +906,18 @@
         function importPresets(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        if (importedData.length > 0 && importedData[0].id && importedData[0].name && importedData[0].state) {
-                            presets = importedData; 
-                            saveToLocalStorage();
-                            updatePresetDropdown();
-                            loadPreset();
-                            showToast(importedData.length + " Presets erfolgreich importiert!");
-                        } else {
-                            showToast("Fehler: Ungültiges Dateiformat.");
-                        }
-                    } else {
-                        showToast("Fehler: Dateiformat ist kein Array.");
-                    }
-                } catch (err) {
-                    showToast("Fehler beim Parsen der JSON-Datei.");
-                }
+                    if (Array.isArray(importedData) && importedData.length > 0 && importedData[0].id) {
+                        presets = importedData; 
+                        saveToLocalStorage();
+                        updatePresetDropdown();
+                        loadPreset();
+                        showToast(importedData.length + " Presets importiert!");
+                    } else { showToast("Fehler: Ungültiges Dateiformat."); }
+                } catch (err) { showToast("Fehler beim Parsen der Datei."); }
                 event.target.value = '';
             };
             reader.readAsText(file);
@@ -878,21 +928,24 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             
-            const btns = ['system', 'modal', 'time', 'freq'];
+            const btns = ['system', 'modal', 'time', 'freq', 'absorber']; // NEU: absorber
             btns.forEach(id => {
                 const btn = document.getElementById('btn-' + id);
-                if(id === tabId) {
-                    btn.classList.add('bg-blue-600', 'text-white');
-                    btn.classList.remove('text-slate-300', 'hover:bg-slate-700');
-                } else {
-                    btn.classList.remove('bg-blue-600', 'text-white');
-                    btn.classList.add('text-slate-300', 'hover:bg-slate-700');
+                if (btn) {
+                    if(id === tabId) {
+                        btn.classList.add('bg-blue-600', 'text-white');
+                        btn.classList.remove('text-slate-300', 'hover:bg-slate-700');
+                    } else {
+                        btn.classList.remove('bg-blue-600', 'text-white');
+                        btn.classList.add('text-slate-300', 'hover:bg-slate-700');
+                    }
                 }
             });
 
             if(tabId === 'modal') calcModal();
             if(tabId === 'time' && !timeSimData) runNewmark();
             if(tabId === 'freq' && !freqChartInst) runFRF();
+            if(tabId === 'absorber' && !absorberChartInst) runAbsorber(); // NEU
         }
 
         function toggleDampingType() {
@@ -1380,18 +1433,17 @@
                         }
                         let phi1 = math.complex(1, 0);
 
-                        // Im Unity-Fall auf die betragsgrößte Komponente 1 skalieren
-                        if (math.abs(phi2) > math.abs(phi1)) {
-                            phi1 = math.divide(phi1, phi2);
-                            phi2 = math.complex(1, 0);
+                        if (normType === 'unity') {
+                            if (math.abs(phi2) > math.abs(phi1)) {
+                                phi1 = math.divide(phi1, phi2);
+                                phi2 = math.complex(1, 0);
+                            }
                         }
 
-                        // Bei Massen-Normierung: Skalierung mit Modalmasse im physikalischen Raum (M)
                         if (normType === 'mass') {
                             let row1 = math.add(math.multiply(M[0][0], phi1), math.multiply(M[0][1], phi2));
                             let row2 = math.add(math.multiply(M[1][0], phi1), math.multiply(M[1][1], phi2));
                             
-                            // m_r = phi^T * M * phi
                             let m_r = math.add(math.multiply(phi1, row1), math.multiply(phi2, row2));
                             let sqrt_m_r = math.sqrt(m_r);
                             
@@ -1879,7 +1931,6 @@
             if (isNaN(idx) || !isFinite(idx) || idx < 0) idx = 0;
             idx = Math.min(idx, timeSimData.t.length - 1);
 
-            // Bugfix: Sicherheitsabfrage falls der Index kurzzeitig undefined ist
             let currentT = timeSimData.t[idx];
             if (currentT === undefined) currentT = 0;
             document.getElementById('anim-time-label').innerText = currentT.toFixed(2) + "s";
@@ -1887,7 +1938,6 @@
             const type1 = document.getElementById('type_dof1').value;
             const type2 = sysDoF === 2 ? document.getElementById('type_dof2').value : null;
 
-            // Bugfix: Sicherheitsabfrage für die Auslenkungs- und Kraftwerte
             let x1_val = timeSimData.x1_tot[idx] || 0;
             let x2_val = (sysDoF === 2 && timeSimData.x2_tot) ? (timeSimData.x2_tot[idx] || 0) : 0;
             
@@ -2129,7 +2179,7 @@
                 if (!targetChart) return;
                 if (activeElements.length > 0) {
                     const idx = activeElements[0].index;
-                    currentHoverIndexFRF = idx; // Index für Tastatursteuerung speichern
+                    currentHoverIndexFRF = idx;
                     const targetEls = targetChart.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
                     targetChart.setActiveElements(targetEls);
                     const meta = targetChart.getDatasetMeta(0);
@@ -2162,7 +2212,7 @@
 
             freqChartInst = new Chart(ctxFreq, {
                 type: 'line',
-                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsMag }, // Genaue Frequenz speichern
+                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsMag },
                 options: {
                     responsive: true,
                     interaction: { mode: 'index', intersect: false },
@@ -2172,7 +2222,7 @@
                         tooltip: {
                             callbacks: {
                                 title: function(tooltipItems) {
-                                    return 'ω = ' + tooltipItems[0].label + ' rad/s'; // Präzises Tooltip-Label
+                                    return 'ω = ' + tooltipItems[0].label + ' rad/s';
                                 }
                             }
                         },
@@ -2195,7 +2245,7 @@
 
             phaseChartInst = new Chart(ctxPhase, {
                 type: 'line',
-                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsPhase }, // Genaue Frequenz speichern
+                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsPhase },
                 options: {
                     responsive: true,
                     interaction: { mode: 'index', intersect: false },
@@ -2205,7 +2255,7 @@
                         tooltip: {
                             callbacks: {
                                 title: function(tooltipItems) {
-                                    return 'ω = ' + tooltipItems[0].label + ' rad/s'; // Präzises Tooltip-Label
+                                    return 'ω = ' + tooltipItems[0].label + ' rad/s';
                                 }
                             }
                         },
@@ -2222,7 +2272,6 @@
                             title: { display: true, text: 'Kreisfrequenz ω (rad/s)' },
                             ticks: {
                                 callback: function(value, index, ticks) {
-                                    // X-Achse zur Übersichtlichkeit auf 1 Nachkommastelle formatieren
                                     return Number(this.getLabelForValue(value)).toFixed(1);
                                 }
                             }
@@ -2231,6 +2280,186 @@
                     }
                 }
             });
+        }
+
+        // --- NEU: Schwingungstilger (Absorber) Logik ---
+        function runAbsorber() {
+            let mu = parseFloat(document.getElementById('abs_mu').value);
+            let beta = parseFloat(document.getElementById('abs_beta').value);
+            let z2 = parseFloat(document.getElementById('abs_z2').value);
+            let z1 = parseFloat(document.getElementById('abs_z1').value);
+
+            document.getElementById('lbl_abs_mu').innerText = mu.toFixed(3);
+            document.getElementById('lbl_abs_beta').innerText = beta.toFixed(3);
+            document.getElementById('lbl_abs_z2').innerText = z2.toFixed(3);
+            document.getElementById('lbl_abs_z1').innerText = z1.toFixed(3);
+
+            const showX2 = document.getElementById('chk_abs_x2').checked;
+
+            let lamArr = [];
+            let v1Arr = [];
+            let v2Arr = [];
+            let vRefArr = [];
+
+            for(let lam=0; lam<=2.5; lam+=0.01) {
+                lamArr.push(lam);
+
+                // Referenz: Nur Hauptsystem ohne Tilger
+                let ref_mag = 1.0 / Math.sqrt(Math.pow(1 - lam*lam, 2) + Math.pow(2*z1*lam, 2));
+                vRefArr.push(ref_mag);
+
+                // Z-Matrix Elemente für M1=1, K1=1, w1=1
+                let Z11_re = 1 + mu*beta*beta - lam*lam;
+                let Z11_im = 2*z1*lam + 2*z2*mu*beta*lam;
+
+                let Z12_re = -mu*beta*beta;
+                let Z12_im = -2*z2*mu*beta*lam;
+
+                let Z22_re = mu*beta*beta - mu*lam*lam;
+                let Z22_im = 2*z2*mu*beta*lam;
+
+                let det_re = Z11_re*Z22_re - Z11_im*Z22_im;
+                let det_im = Z11_re*Z22_im + Z11_im*Z22_re;
+
+                let z12_sq_re = Z12_re*Z12_re - Z12_im*Z12_im;
+                let z12_sq_im = 2*Z12_re*Z12_im;
+
+                det_re -= z12_sq_re;
+                det_im -= z12_sq_im;
+
+                let det_mag2 = det_re*det_re + det_im*det_im;
+
+                if (det_mag2 < 1e-12) {
+                    v1Arr.push(null); v2Arr.push(null); continue;
+                }
+
+                let z22_mag = Math.sqrt(Z22_re*Z22_re + Z22_im*Z22_im);
+                let x1_mag = z22_mag / Math.sqrt(det_mag2);
+                v1Arr.push(x1_mag);
+
+                if (showX2) {
+                    let neg_z12_re = -Z12_re;
+                    let neg_z12_im = -Z12_im;
+                    let z12_mag = Math.sqrt(neg_z12_re*neg_z12_re + neg_z12_im*neg_z12_im);
+                    let x2_mag = z12_mag / Math.sqrt(det_mag2);
+                    v2Arr.push(x2_mag);
+                }
+            }
+
+            plotAbsorber(lamArr, v1Arr, vRefArr, showX2 ? v2Arr : null);
+        }
+
+        function plotAbsorber(lamArr, v1Arr, vRefArr, v2Arr) {
+            const canvasEl = document.getElementById('absorberChart');
+            if (!canvasEl) return;
+            const ctx = canvasEl.getContext('2d');
+            
+            if(absorberChartInst) absorberChartInst.destroy();
+
+            let datasets = [
+                { label: 'Mit Tilger (V₁)', data: v1Arr, borderColor: '#2563eb', tension: 0.1, pointRadius: 0, borderWidth: 2 },
+                { label: 'Ohne Tilger (Ref.)', data: vRefArr, borderColor: '#94a3b8', borderDash: [5,5], tension: 0.1, pointRadius: 0, borderWidth: 2 }
+            ];
+
+            if (v2Arr) {
+                datasets.push({ label: 'Tilgermasse (V₂)', data: v2Arr, borderColor: '#10b981', tension: 0.1, pointRadius: 0, borderWidth: 2 });
+            }
+
+            // Dynamische Y-Achsen Skalierung auf V1 anpassen
+            let maxV1 = 0;
+            v1Arr.forEach(v => {
+                // Extrem hohe Peaks filtern, damit wir das Plateau/die Täler gut sehen
+                if (v !== null && isFinite(v) && v < 100) {
+                    maxV1 = Math.max(maxV1, v);
+                }
+            });
+            
+            // Puffer von 15% hinzufügen, aber zwischen 5 und 25 kappen, 
+            // damit die unendlichen Resonanzspitzen die Darstellung nicht zerstören
+            let yMax = maxV1 * 1.15;
+            if (yMax < 5) yMax = 5;
+            if (yMax > 25) yMax = 25;
+
+            absorberChartInst = new Chart(ctx, {
+                type: 'line',
+                data: { labels: lamArr.map(val => val.toFixed(2)), datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { 
+                        title: { display: false },
+                        tooltip: { callbacks: { title: function(tooltipItems) { return 'λ = ' + tooltipItems[0].label; } } },
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Frequenzverhältnis λ = ω / ω₁' } },
+                        y: { 
+                            title: { display: true, text: 'Vergrößerungsfaktor V' }, 
+                            min: 0,
+                            max: yMax // Hier das berechnete Maximum anwenden
+                        }
+                    }
+                }
+            });
+        }
+
+        function applyDenHartog() {
+            const mu = parseFloat(document.getElementById('abs_mu').value);
+            // Den-Hartog Optimale Auslegung (für ungedämpftes Hauptsystem z1=0 abgeleitet, gilt aber als bester Kompromiss)
+            const beta = 1.0 / (1.0 + mu);
+            const z2 = Math.sqrt((3.0 * mu) / (8.0 * Math.pow(1.0 + mu, 3)));
+            
+            document.getElementById('abs_beta').value = beta;
+            document.getElementById('abs_z2').value = z2;
+            
+            // Standardmäßig Hauptsystemdämpfung auf 0 setzen für reine akademische Darstellung
+            document.getElementById('abs_z1').value = 0; 
+
+            runAbsorber();
+            showToast("Den-Hartog Parameter angewendet!");
+        }
+
+        function transferAbsorberToMain() {
+            // Skaliert auf das aktuelle 200 N/m Basis-System im Tab 1
+            const m1 = 1.0;
+            const k1 = 200.0;
+            const w1 = Math.sqrt(k1/m1); 
+
+            const mu = parseFloat(document.getElementById('abs_mu').value);
+            const beta = parseFloat(document.getElementById('abs_beta').value);
+            const z2 = parseFloat(document.getElementById('abs_z2').value);
+            const z1 = parseFloat(document.getElementById('abs_z1').value);
+
+            const m2 = mu * m1;
+            const w2 = beta * w1;
+            const k2 = m2 * w2 * w2;
+            
+            const c1 = 2 * z1 * m1 * w1;
+            const c2 = 2 * z2 * m2 * w2;
+
+            document.getElementById('m11').value = m1.toFixed(4);
+            document.getElementById('m22').value = m2.toFixed(4);
+            document.getElementById('m12').value = 0;
+            document.getElementById('m21').value = 0;
+
+            document.getElementById('k11').value = (k1 + k2).toFixed(4);
+            document.getElementById('k22').value = k2.toFixed(4);
+            document.getElementById('k12').value = (-k2).toFixed(4);
+            document.getElementById('k21').value = (-k2).toFixed(4);
+
+            document.getElementById('damping-type').value = 'matrix';
+            toggleDampingType();
+
+            document.getElementById('c11').value = (c1 + c2).toFixed(4);
+            document.getElementById('c22').value = c2.toFixed(4);
+            document.getElementById('c12').value = (-c2).toFixed(4);
+            document.getElementById('c21').value = (-c2).toFixed(4);
+
+            setDoF(2);
+            saveSystem();
+            switchTab('freq');
+            showToast("Tilger in 2-DoF Matrizen konvertiert!");
         }
         
         // Init
