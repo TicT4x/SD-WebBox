@@ -22,15 +22,15 @@
         .matrix-input {
             position: relative;
             display: inline-block;
-            padding: 0 10px;
+            padding: 0 4px;
         }
         .matrix-input::before, .matrix-input::after {
             content: "";
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 8px;
-            border: 2px solid #374151;
+            width: 6px;
+            border: 2px solid #64748b;
         }
         .matrix-input::before { left: 0; border-right: none; }
         .matrix-input::after { right: 0; border-left: none; }
@@ -38,20 +38,28 @@
 </head>
 <body class="bg-gray-50 text-gray-800 h-screen flex overflow-hidden">
 
-    <!-- Seitenleiste -->
-    <aside class="w-64 bg-slate-800 text-white flex flex-col shadow-xl z-10 shrink-0">
-        <div class="p-6 border-b border-slate-700">
+    <!-- Schlanke Seitenleiste -->
+    <aside class="w-64 bg-slate-800 text-white flex flex-col shadow-xl z-50 shrink-0 h-full relative">
+        <div class="p-6 border-b border-slate-700 shrink-0">
             <h1 class="text-2xl font-bold flex items-center gap-2">
                 <i data-lucide="activity" class="text-blue-400"></i>
                 SD WebBox
             </h1>
             <p class="text-xs text-slate-400 mt-2">Strukturdynamik Toolbox</p>
         </div>
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchTab('system')" id="btn-system" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white transition-colors">
-                <i data-lucide="settings-2"></i> Systemdefinition
-            </button>
-            <button onclick="switchTab('modal')" id="btn-modal" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+
+        <!-- Systemdefinition Flyout Trigger -->
+        <button onclick="toggleSystemFlyout()" class="w-full flex justify-between items-center p-4 bg-blue-700 hover:bg-blue-600 transition-colors border-b border-blue-800 shrink-0">
+            <span class="font-bold flex items-center gap-2 text-sm"><i data-lucide="settings-2" class="w-4 h-4"></i> Systemdefinition</span>
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto border-b border-slate-700">
+            <!-- Bereich 1: Hauptsystem-Abhängige Analysen -->
+            <div class="mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Systemanalyse</div>
+            
+            <button onclick="switchTab('modal')" id="btn-modal" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left bg-blue-600 text-white transition-colors">
                 <i data-lucide="bar-chart-2"></i> Modalanalyse
             </button>
             <button onclick="switchTab('time')" id="btn-time" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
@@ -60,171 +68,187 @@
             <button onclick="switchTab('freq')" id="btn-freq" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
                 <i data-lucide="radio"></i> Frequenzbereich
             </button>
-            <!-- NEU: Tilger Tab Button -->
-            <button onclick="switchTab('absorber')" id="btn-absorber" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors mt-4 border-t border-slate-600 pt-4">
-                <i data-lucide="magnet"></i> Schwingungstilger
+            
+            <!-- Bereich 2: Isolierte Module -->
+            <div class="mt-6 mb-2 pt-4 border-t border-slate-700 text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Zusatzmodule</div>
+            
+            <button onclick="switchTab('absorber')" id="btn-absorber" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
+                <i data-lucide="magnet"></i> Vibration Absorber
             </button>
         </nav>
         
         <!-- Preset Verwaltung -->
-        <div class="p-4 border-t border-slate-700">
+        <div class="p-4 border-t border-slate-700 mt-auto shrink-0">
             <h3 class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Presets</h3>
             <div class="flex gap-1 mb-2">
-                <select id="preset_select" class="flex-1 p-1.5 bg-slate-700 text-white rounded text-sm border border-slate-600 focus:ring-2 focus:ring-blue-500 w-full overflow-hidden text-ellipsis"></select>
+                <select id="preset_select" class="flex-1 p-1.5 bg-slate-700 text-white rounded text-xs border border-slate-600 focus:ring-1 focus:ring-blue-500 w-full overflow-hidden text-ellipsis"></select>
                 <button onclick="loadPreset()" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1.5 rounded transition-colors" title="Ausgewähltes Preset anwenden">
                     <i data-lucide="check" class="w-4 h-4"></i>
                 </button>
             </div>
             <div class="grid grid-cols-4 gap-1 mb-2">
-                <button onclick="savePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Neu speichern"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-                <button onclick="overwritePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Aktuelles überschreiben"><i data-lucide="save" class="w-3.5 h-3.5"></i></button>
-                <button onclick="renamePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Umbenennen"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
-                <button onclick="deletePreset()" class="bg-slate-700 hover:bg-red-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Löschen"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                <button onclick="savePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Neu speichern"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                <button onclick="overwritePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Aktuelles überschreiben"><i data-lucide="save" class="w-3 h-3"></i></button>
+                <button onclick="renamePreset()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Umbenennen"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
+                <button onclick="deletePreset()" class="bg-slate-700 hover:bg-red-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center" title="Löschen"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
             </div>
-            <!-- Import/Export File Area -->
             <div class="grid grid-cols-2 gap-1">
-                <button onclick="exportPresets()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center items-center gap-1" title="In Datei exportieren"><i data-lucide="download" class="w-3.5 h-3.5"></i> Export</button>
-                <button onclick="document.getElementById('import_file').click()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs py-1.5 rounded transition-colors flex justify-center items-center gap-1" title="Aus Datei importieren"><i data-lucide="folder-open" class="w-3.5 h-3.5"></i> Import</button>
+                <button onclick="exportPresets()" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-1 rounded transition-colors flex justify-center items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> Export</button>
+                <button onclick="document.getElementById('import_file').click()" class="bg-slate-700 hover:bg-slate-600 text-white text-[10px] py-1 rounded transition-colors flex justify-center items-center gap-1"><i data-lucide="folder-open" class="w-3 h-3"></i> Import</button>
                 <input type="file" id="import_file" class="hidden" accept=".json" onchange="importPresets(event)">
             </div>
         </div>
-
-        <div class="p-4 border-t border-slate-700 text-xs text-slate-400">
-            Basierend auf Skriptmethoden (MDoF, Newmark, Tilger).
-        </div>
     </aside>
 
-    <!-- Hauptinhalt -->
-    <main class="flex-1 overflow-y-auto p-8">
-        
-        <!-- Tab 1: Systemdefinition -->
-        <div id="system" class="tab-content active max-w-5xl mx-auto">
-            <div class="flex justify-between items-end border-b pb-2 mb-6">
-                <h2 id="system-title" class="text-3xl font-bold text-slate-800">2-DoF Systemdefinition</h2>
-                
-                <!-- DoF Umschalter -->
-                <div class="flex bg-gray-200 p-1 rounded-lg">
-                    <button onclick="setDoF(1)" id="btn-dof1" class="px-4 py-1.5 rounded-md text-sm font-semibold text-gray-600 transition-colors">1-DoF</button>
-                    <button onclick="setDoF(2)" id="btn-dof2" class="px-4 py-1.5 rounded-md text-sm font-semibold bg-white text-blue-600 shadow-sm transition-colors">2-DoF</button>
-                </div>
-            </div>
-            
-            <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 flex gap-4">
-                <div class="flex-1">
-                    <label class="block text-sm font-semibold text-blue-800 mb-1">Art von DoF 1</label>
-                    <select id="type_dof1" onchange="updateLabels()" class="w-full p-2 border rounded bg-white text-sm">
-                        <option value="trans">Translatorisch (Verschiebung x)</option>
-                        <option value="rot">Rotatorisch (Winkel &varphi;)</option>
-                    </select>
-                </div>
-                <div class="flex-1 dof-2-only">
-                    <label class="block text-sm font-semibold text-blue-800 mb-1">Art von DoF 2</label>
-                    <select id="type_dof2" onchange="updateLabels()" class="w-full p-2 border rounded bg-white text-sm">
-                        <option value="trans">Translatorisch (Verschiebung x)</option>
-                        <option value="rot">Rotatorisch (Winkel &varphi;)</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                <!-- Massenmatrix -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center flex flex-col items-center">
-                    <h3 class="font-semibold text-lg mb-4">Trägheitsmatrix [M] <br><span id="unit-m" class="text-xs text-gray-400 font-normal"></span></h3>
-                    <div class="matrix-input mt-auto">
-                        <div id="m-grid" class="grid grid-cols-2 gap-2">
-                            <input type="number" id="m11" value="1.0" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500">
-                            <input type="number" id="m12" value="0.0" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                            <input type="number" id="m21" value="0.0" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                            <input type="number" id="m22" value="1.5" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                        </div>
-                    </div>
-                </div>
+    <!-- Backdrop für Flyout Menu -->
+    <div id="flyout-backdrop" onclick="toggleSystemFlyout()" class="fixed inset-0 bg-slate-900/50 z-30 hidden transition-opacity opacity-0 backdrop-blur-sm"></div>
 
-                <!-- Dämpfungsmatrix -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center flex flex-col items-center">
-                    <h3 class="font-semibold text-lg mb-4 flex flex-col items-center gap-2">
-                        <select id="damping-type" onchange="toggleDampingType(); saveSystem();" class="text-sm font-semibold p-1 border rounded bg-gray-50 focus:ring-2 focus:ring-blue-500 text-center">
-                            <option value="matrix">Dämpfungsmatrix [C]</option>
-                            <option value="ratio">Modal über Dämpfungsmaß [&zeta;]</option>
-                            <option value="rayleigh">Rayleigh-Dämpfung (&alpha;M + &beta;K)</option>
-                        </select>
-                        <span id="unit-c" class="text-xs text-gray-400 font-normal"></span>
-                    </h3>
-                    
-                    <div id="zeta-inputs" class="hidden justify-center gap-4 mb-4 bg-blue-50 p-2 rounded-lg border border-blue-100 w-full">
-                        <div>
-                            <label class="block text-xs text-blue-700 font-semibold mb-1">&zeta;₁</label>
-                            <input type="number" id="zeta1" value="0.05" step="0.01" onchange="saveSystem()" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                        </div>
-                        <div class="dof-2-only">
-                            <label class="block text-xs text-blue-700 font-semibold mb-1">&zeta;₂</label>
-                            <input type="number" id="zeta2" value="0.05" step="0.01" onchange="saveSystem()" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                        </div>
-                    </div>
-
-                    <div id="rayleigh-inputs" class="hidden justify-center gap-4 mb-4 bg-blue-50 p-2 rounded-lg border border-blue-100 w-full">
-                        <div>
-                            <label class="block text-xs text-blue-700 font-semibold mb-1">&alpha; (Massenprop.)</label>
-                            <input type="number" id="rayleigh_a" value="0.1" step="0.05" onchange="saveSystem()" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-blue-700 font-semibold mb-1">&beta; (Steifigk.prop.)</label>
-                            <input type="number" id="rayleigh_b" value="0.001" step="0.001" onchange="saveSystem()" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 bg-white shadow-sm">
-                        </div>
-                    </div>
-
-                    <div class="matrix-input mt-auto">
-                        <div id="c-grid" class="grid grid-cols-2 gap-2">
-                            <input type="number" id="c11" value="0.5" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 transition-colors">
-                            <input type="number" id="c12" value="-0.2" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only transition-colors">
-                            <input type="number" id="c21" value="-0.2" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only transition-colors">
-                            <input type="number" id="c22" value="0.6" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only transition-colors">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Steifigkeitsmatrix -->
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center flex flex-col items-center">
-                    <h3 class="font-semibold text-lg mb-4">Steifigkeitsmatrix [K] <br><span id="unit-k" class="text-xs text-gray-400 font-normal"></span></h3>
-                    <div class="matrix-input mt-auto">
-                        <div id="k-grid" class="grid grid-cols-2 gap-2">
-                            <input type="number" id="k11" value="200" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500">
-                            <input type="number" id="k12" value="-100" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                            <input type="number" id="k21" value="-100" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                            <input type="number" id="k22" value="150" class="w-16 p-1 border rounded text-center focus:ring-2 focus:ring-blue-500 dof-2-only">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-end">
-                <button onclick="saveSystem(); switchTab('time');" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-all flex items-center gap-2">
-                    Zum Zeitbereich <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </button>
-            </div>
+    <!-- Flyout Systemdefinition (Slide-Out) -->
+    <div id="system-flyout" class="fixed top-0 left-64 h-full w-80 md:w-[26rem] bg-gray-50 text-slate-800 shadow-[10px_0_20px_-5px_rgba(0,0,0,0.5)] z-40 transform -translate-x-full transition-transform duration-300 overflow-y-auto border-r border-gray-200 flex flex-col">
+        <div class="p-5 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10 shrink-0 shadow-sm">
+            <h2 class="font-bold text-lg flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5 text-blue-600"></i> Systemdefinition</h2>
+            <button onclick="toggleSystemFlyout()" class="text-gray-500 hover:text-gray-800 transition-colors bg-gray-100 hover:bg-gray-200 p-1.5 rounded">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
         </div>
+        
+        <div class="p-5 space-y-6 flex-1">
+            <!-- Freiheitsgrade -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-2 uppercase">Freiheitsgrade</label>
+                <div class="flex bg-gray-200 p-1 rounded-lg">
+                    <button onclick="setDoF(1)" id="btn-dof1" class="flex-1 py-1.5 rounded text-xs font-semibold text-gray-600 transition-colors">1-DoF</button>
+                    <button onclick="setDoF(2)" id="btn-dof2" class="flex-1 py-1.5 rounded text-xs font-semibold bg-white text-blue-600 shadow-sm transition-colors">2-DoF</button>
+                    <button onclick="setDoF(3)" id="btn-dof3" class="flex-1 py-1.5 rounded text-xs font-semibold text-gray-600 transition-colors">3-DoF</button>
+                </div>
+            </div>
 
+            <!-- Matrix M -->
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-bold text-slate-800">Trägheit [M]</span>
+                    <span id="unit-m" class="text-xs text-gray-400 font-mono"></span>
+                </div>
+                <div class="flex justify-center">
+                    <div class="matrix-input">
+                        <div id="m-grid" class="grid gap-1.5 grid-cols-2">
+                            <input type="number" id="m11" value="1.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500" onchange="saveSystem()">
+                            <input type="number" id="m12" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="m13" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="m21" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="m22" value="1.5" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="m23" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="m31" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="m32" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="m33" value="1.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matrix C -->
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex flex-col gap-3 mb-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-800">Dämpfung</span>
+                    </div>
+                    <select id="damping-type" onchange="toggleDampingType(); saveSystem();" class="w-full text-sm font-medium p-2 border border-gray-300 rounded bg-gray-50 text-slate-800 focus:ring-1 focus:ring-blue-500">
+                        <option value="matrix">Matrixeingabe [C]</option>
+                        <option value="ratio">Modale Dämpfungsmaße [&zeta;]</option>
+                        <option value="rayleigh">Rayleigh-Dämpfung (&alpha;M + &beta;K)</option>
+                    </select>
+                    
+                    <div id="zeta-inputs" class="hidden grid-cols-3 gap-2 bg-blue-50 p-2 rounded border border-blue-100">
+                        <input type="number" id="zeta1" value="0.05" step="0.01" class="w-full p-1.5 bg-white text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 shadow-sm" placeholder="ζ₁" onchange="saveSystem()">
+                        <input type="number" id="zeta2" value="0.05" step="0.01" class="w-full p-1.5 bg-white text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 shadow-sm req-dof-2" placeholder="ζ₂" onchange="saveSystem()">
+                        <input type="number" id="zeta3" value="0.05" step="0.01" class="w-full p-1.5 bg-white text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 shadow-sm req-dof-3" placeholder="ζ₃" onchange="saveSystem()">
+                    </div>
+                    
+                    <div id="rayleigh-inputs" class="hidden grid-cols-2 gap-2 bg-blue-50 p-2 rounded border border-blue-100">
+                        <div>
+                            <span class="text-[10px] text-blue-700 font-semibold block mb-1 text-center">&alpha; (Massenprop.)</span>
+                            <input type="number" id="rayleigh_a" value="0.1" step="0.05" class="w-full p-1.5 bg-white text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 shadow-sm" placeholder="α" onchange="saveSystem()">
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-blue-700 font-semibold block mb-1 text-center">&beta; (Steifigk.prop.)</span>
+                            <input type="number" id="rayleigh_b" value="0.001" step="0.001" class="w-full p-1.5 bg-white text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 shadow-sm" placeholder="β" onchange="saveSystem()">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="matrix-input">
+                        <div id="c-grid" class="grid gap-1.5 grid-cols-2">
+                            <input type="number" id="c11" value="0.5" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500" onchange="saveSystem()">
+                            <input type="number" id="c12" value="-0.2" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="c13" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="c21" value="-0.2" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="c22" value="0.6" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="c23" value="-0.1" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="c31" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="c32" value="-0.1" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="c33" value="0.3" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matrix K -->
+            <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-bold text-slate-800">Steifigkeit [K]</span>
+                    <span id="unit-k" class="text-xs text-gray-400 font-mono"></span>
+                </div>
+                <div class="flex justify-center">
+                    <div class="matrix-input">
+                        <div id="k-grid" class="grid gap-1.5 grid-cols-2">
+                            <input type="number" id="k11" value="200" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500" onchange="saveSystem()">
+                            <input type="number" id="k12" value="-100" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="k13" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="k21" value="-100" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="k22" value="150" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-2" onchange="saveSystem()">
+                            <input type="number" id="k23" value="-50" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            
+                            <input type="number" id="k31" value="0.0" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="k32" value="-50" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                            <input type="number" id="k33" value="100" class="w-14 md:w-16 p-1.5 bg-gray-50 text-slate-800 text-sm border border-gray-300 rounded text-center focus:ring-1 focus:ring-blue-500 req-dof-3" onchange="saveSystem()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="applyChangesAndClose()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-3 px-4 rounded shadow transition-colors mt-2">
+                Änderungen anwenden
+            </button>
+        </div>
+    </div>
+
+    <!-- Hauptinhalt -->
+    <main class="flex-1 overflow-y-auto p-8 relative">
+        
         <!-- Tab 2: Modalanalyse -->
-        <div id="modal" class="tab-content max-w-5xl mx-auto">
+        <div id="modal" class="tab-content active max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Modalanalyse & Eigenwerte</h2>
             
             <div class="bg-gray-50 border border-gray-200 p-4 rounded-xl flex items-center gap-4 mb-6 shadow-inner">
                 <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                     <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i> Eigenvektor-Normierung:
                 </span>
-                <select id="evec_norm" onchange="calcModal()" class="p-1.5 border rounded focus:ring-2 focus:ring-blue-500 font-medium text-sm">
+                <select id="evec_norm" onchange="calcModal()" class="p-1.5 border rounded focus:ring-2 focus:ring-blue-500 font-medium text-sm bg-white">
                     <option value="mass" selected>Massen-Normiert (&Phi;ᵀ M &Phi; = I)</option>
                     <option value="unity">Unity-Normiert (Max. Komponente = 1)</option>
                 </select>
             </div>
-
-            <p class="mb-6 text-gray-600">Berechnung der Eigenfrequenzen, der zugehörigen Eigenvektoren und Überprüfung der Massenorthogonalität.</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8" id="modal-results"></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="modal-results"></div>
             
             <div id="modal-matrices-container" class="bg-gray-100 rounded-xl shadow-inner border border-gray-200 mb-8 hidden overflow-hidden">
                 <button onclick="toggleSection('modal-matrices-content-wrapper', 'modal-matrices-icon')" class="w-full p-6 text-left font-bold text-lg text-slate-700 flex items-center justify-between hover:bg-gray-200 transition-colors">
-                    <span class="flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5"></i> Orthogonalitäts-Check (Modale Matrizen)</span>
+                    <span class="flex items-center gap-2"><i data-lucide="check-square" class="w-5 h-5 text-blue-600"></i> Orthogonalitäts-Check (Modale Matrizen)</span>
                     <i id="modal-matrices-icon" data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-200"></i>
                 </button>
                 <div id="modal-matrices-content-wrapper" class="hidden px-6 pb-6">
@@ -237,7 +261,7 @@
                 <div class="flex items-center gap-2 mb-4">
                     <h3 class="font-bold text-xl text-slate-800">Komplexe Eigenwerte (Polstellen in der s-Ebene)</h3>
                 </div>
-                <div id="eigenvalues-list" class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                <div id="eigenvalues-list" class="mb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 <div class="w-full">
                     <canvas id="eigenChart" height="120"></canvas>
                 </div>
@@ -246,7 +270,7 @@
 
         <!-- Tab 3: Zeitbereich -->
         <div id="time" class="tab-content max-w-5xl mx-auto">
-            <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Zeitbereichsantwort (Newmark-&beta;)</h2>
+            <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Zeitbereich</h2>
             
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col gap-6">
                 <!-- Systemverhalten & Zeitparameter -->
@@ -271,91 +295,8 @@
 
                 <!-- Dynamische Erreger-Inputs -->
                 <div id="ui_forced" class="grid grid-cols-1 gap-6 items-end">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label id="label-f1" class="block text-sm font-semibold text-blue-700 mb-1">Erregerlast DoF 1</label>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <input type="number" id="f1_amp" value="10" class="w-24 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Amp." title="Amplitude M0 bzw. F0">
-                                
-                                <select id="f1_func" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white font-medium text-sm shrink-0">
-                                    <option value="sin">&middot; sin(</option>
-                                    <option value="cos">&middot; cos(</option>
-                                </select>
-
-                                <input type="number" id="f1_freq" value="10" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&omega;" title="Kreisfrequenz &omega;">
-                                <span class="text-sm font-semibold">&middot;t +</span>
-                                
-                                <input type="number" id="f1_phase" value="0" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&varphi;" title="Phasenverschiebung in Grad (&deg;)">
-                                <span class="text-sm font-semibold">&deg;)</span>
-                            </div>
-                        </div>
-
-                        <div class="dof-2-only">
-                            <label id="label-f2" class="block text-sm font-semibold text-blue-700 mb-1">Erregerlast DoF 2</label>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <input type="number" id="f2_amp" value="0" class="w-24 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="Amp." title="Amplitude M0 bzw. F0">
-                                
-                                <select id="f2_func" class="p-2 border rounded focus:ring-2 focus:ring-blue-500 bg-white font-medium text-sm shrink-0">
-                                    <option value="sin">&middot; sin(</option>
-                                    <option value="cos">&middot; cos(</option>
-                                </select>
-
-                                <input type="number" id="f2_freq" value="10" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&omega;" title="Kreisfrequenz &omega;">
-                                <span class="text-sm font-semibold">&middot;t +</span>
-                                
-                                <input type="number" id="f2_phase" value="0" class="w-20 p-2 border rounded focus:ring-2 focus:ring-blue-500" placeholder="&varphi;" title="Phasenverschiebung in Grad (&deg;)">
-                                <span class="text-sm font-semibold">&deg;)</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-span-1">
-                        <p class="text-xs text-gray-500 mb-2">Hinweis: Bei kinematischer Erregung ($\alpha_0$) das Ersatzmoment $M_{ersatz} \approx k_t \cdot \alpha_0$ eingeben!</p>
-
-                        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg shadow-sm overflow-hidden mt-4">
-                            <button onclick="toggleSection('theory-calc-content', 'theory-calc-icon')" class="w-full p-4 text-left flex items-center justify-between text-blue-900 hover:bg-blue-100 transition-colors">
-                                <h4 class="text-sm font-bold">Theoretische Vorabberechnung (Stationäre Antwort)</h4>
-                                <i id="theory-calc-icon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
-                            </button>
-                            <div id="theory-calc-content" class="hidden px-4 pb-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h5 class="text-xs font-bold text-blue-800 mb-1">DoF 1</h5>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>stat,1</sub></span>
-                                                <span id="val_x_stat_1" class="font-mono text-sm text-slate-800">0.0000</span>
-                                            </div>
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>dyn,1</sub></span>
-                                                <span id="val_x_dyn_1" class="font-mono text-sm text-slate-800">0.0000</span>
-                                            </div>
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">V₁</span>
-                                                <span id="val_v_factor_1" class="font-mono text-sm font-bold text-blue-700">1.00</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="dof-2-only">
-                                        <h5 class="text-xs font-bold text-blue-800 mb-1">DoF 2</h5>
-                                        <div class="grid grid-cols-3 gap-2">
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>stat,2</sub></span>
-                                                <span id="val_x_stat_2" class="font-mono text-sm text-slate-800">0.0000</span>
-                                            </div>
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">x<sub>dyn,2</sub></span>
-                                                <span id="val_x_dyn_2" class="font-mono text-sm text-slate-800">0.0000</span>
-                                            </div>
-                                            <div class="bg-white p-2 rounded border border-blue-100">
-                                                <span class="block text-[10px] text-blue-600 font-semibold mb-1">V₂</span>
-                                                <span id="val_v_factor_2" class="font-mono text-sm font-bold text-blue-700">1.00</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="force-inputs-container">
+                        <!-- Dynamisch generiert -->
                     </div>
                 </div>
 
@@ -386,23 +327,8 @@
                         <i id="ic-icon" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200"></i>
                     </button>
                     <div id="ic-content" class="hidden pb-2 pt-2">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                            <div>
-                                <label id="lbl_x0_1" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 1 (0)</label>
-                                <input type="number" id="x0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                            </div>
-                            <div class="dof-2-only">
-                                <label id="lbl_x0_2" class="block text-xs font-semibold text-gray-500 mb-1">Pos. 2 (0)</label>
-                                <input type="number" id="x0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                            </div>
-                            <div>
-                                <label id="lbl_v0_1" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 1 (0)</label>
-                                <input type="number" id="v0_1" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                            </div>
-                            <div class="dof-2-only">
-                                <label id="lbl_v0_2" class="block text-xs font-semibold text-gray-500 mb-1">Geschw. 2 (0)</label>
-                                <input type="number" id="v0_2" value="0" step="0.1" class="w-full p-1.5 border rounded focus:ring-2 focus:ring-blue-500 bg-white">
-                            </div>
+                        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100" id="ic-grid">
+                            <!-- Dynamisch -->
                         </div>
                     </div>
                 </div>
@@ -484,73 +410,6 @@
             </div>
         </div>
 
-        <!-- NEU: Schwingungstilger Tab -->
-        <div id="absorber" class="tab-content max-w-5xl mx-auto">
-            <div class="flex justify-between items-end border-b pb-2 mb-6">
-                <h2 class="text-3xl font-bold text-slate-800">Schwingungstilger (Vibration Absorber)</h2>
-            </div>
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                <p class="text-sm text-blue-800">Untersuche die Wirkung eines Tilgers (Sekundärmasse) auf das Hauptsystem (Primärmasse). Verändere die Werte live, um zu sehen, wie sich der Amplitudengang ($V_1$) der Primärmasse verändert. F<sub>0</sub> greift an Masse 1 an.</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <!-- Control Panel -->
-                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-6">
-                    <div>
-                        <div class="flex justify-between mb-1">
-                            <label class="text-sm font-semibold text-gray-700">Massenverh. &mu; = m₂/m₁</label>
-                            <span id="lbl_abs_mu" class="text-sm font-mono font-bold text-blue-600">0.100</span>
-                        </div>
-                        <input type="range" id="abs_mu" min="0.01" max="0.5" step="0.01" value="0.1" class="w-full accent-blue-600" oninput="runAbsorber()">
-                    </div>
-                    <div>
-                        <div class="flex justify-between mb-1">
-                            <label class="text-sm font-semibold text-gray-700" title="Tuning Ratio ω₂/ω₁">Frequenzverh. &alpha; (bzw. &beta;)</label>
-                            <span id="lbl_abs_beta" class="text-sm font-mono font-bold text-blue-600">1.000</span>
-                        </div>
-                        <input type="range" id="abs_beta" min="0.5" max="1.5" step="0.01" value="1.0" class="w-full accent-blue-600" oninput="runAbsorber()">
-                    </div>
-                    <div>
-                        <div class="flex justify-between mb-1">
-                            <label class="text-sm font-semibold text-gray-700">Tilgerdämpfung &zeta;₂</label>
-                            <span id="lbl_abs_z2" class="text-sm font-mono font-bold text-blue-600">0.000</span>
-                        </div>
-                        <input type="range" id="abs_z2" min="0.0" max="0.5" step="0.01" value="0.0" class="w-full accent-blue-600" oninput="runAbsorber()">
-                        <p class="text-[10px] text-gray-400 mt-1">0 = Ungedämpft, &gt;0 = Gedämpfter Tilger</p>
-                    </div>
-                    <div class="pt-4 border-t border-gray-100">
-                        <div class="flex justify-between mb-1">
-                            <label class="text-sm font-semibold text-gray-500">Systemdämpfung &zeta;₁</label>
-                            <span id="lbl_abs_z1" class="text-sm font-mono font-bold text-gray-600">0.020</span>
-                        </div>
-                        <input type="range" id="abs_z1" min="0.0" max="0.2" step="0.01" value="0.02" class="w-full accent-gray-500" oninput="runAbsorber()">
-                    </div>
-                    
-                    <div class="mt-auto pt-4 flex flex-col gap-2">
-                        <button onclick="applyDenHartog()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
-                            <i data-lucide="zap" class="w-4 h-4"></i> Den-Hartog Optimierung
-                        </button>
-                        <button onclick="transferAbsorberToMain()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
-                            <i data-lucide="arrow-up-right" class="w-4 h-4"></i> In Systemdefinition laden
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Graphen -->
-                <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-md font-bold text-slate-800">Vergrößerungsfaktor (V₁) der Primärmasse</h3>
-                        <label class="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer hover:text-green-600">
-                            <input type="checkbox" id="chk_abs_x2" onchange="runAbsorber()" class="rounded text-green-600 focus:ring-green-500"> Auch Tilgermasse (V₂) anzeigen
-                        </label>
-                    </div>
-                    <div class="flex-1 w-full min-h-[300px]">
-                        <canvas id="absorberChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Tab 4: Frequenzbereich -->
         <div id="freq" class="tab-content max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold mb-6 text-slate-800 border-b pb-2">Frequenzgang (FRF)</h2>
@@ -602,6 +461,73 @@
             </div>
         </div>
 
+        <!-- Tab 5: Schwingungstilger -->
+        <div id="absorber" class="tab-content max-w-5xl mx-auto">
+            <div class="flex justify-between items-end border-b pb-2 mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">Vibration Absorber</h2>
+            </div>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                <p class="text-sm text-blue-800">Untersuche die Wirkung eines Tilgers (Sekundärmasse) auf das Hauptsystem (Primärmasse). Verändere die Werte live, um zu sehen, wie sich der Amplitudengang ($V_1$) der Primärmasse verändert. F<sub>0</sub> greift an Masse 1 an.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Control Panel -->
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-6">
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700 mb-1 block">Massenverh. &mu; = m₂/m₁</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="abs_mu" min="0.01" max="0.5" step="0.005" value="0.1" class="flex-1 accent-blue-600" oninput="document.getElementById('abs_mu_num').value=this.value; runAbsorber()">
+                            <input type="number" id="abs_mu_num" value="0.100" step="0.005" class="w-20 p-1.5 border rounded text-xs font-mono focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('abs_mu').value=this.value; runAbsorber()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700 mb-1 block" title="Tuning Ratio ω₂/ω₁">Frequenzverh. &alpha; (bzw. &beta;)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="abs_beta" min="0.5" max="1.5" step="0.005" value="1.0" class="flex-1 accent-blue-600" oninput="document.getElementById('abs_beta_num').value=this.value; runAbsorber()">
+                            <input type="number" id="abs_beta_num" value="1.000" step="0.005" class="w-20 p-1.5 border rounded text-xs font-mono focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('abs_beta').value=this.value; runAbsorber()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700 mb-1 block">Tilgerdämpfung &zeta;₂</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="abs_z2" min="0.0" max="0.5" step="0.005" value="0.0" class="flex-1 accent-blue-600" oninput="document.getElementById('abs_z2_num').value=this.value; runAbsorber()">
+                            <input type="number" id="abs_z2_num" value="0.000" step="0.005" class="w-20 p-1.5 border rounded text-xs font-mono focus:ring-2 focus:ring-blue-500" oninput="document.getElementById('abs_z2').value=this.value; runAbsorber()">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">0 = Ungedämpft, &gt;0 = Gedämpfter Tilger</p>
+                    </div>
+                    <div class="pt-4 border-t border-gray-100">
+                        <label class="text-sm font-semibold text-gray-500 mb-1 block">Systemdämpfung &zeta;₁</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="abs_z1" min="0.0" max="0.2" step="0.005" value="0.0" class="flex-1 accent-gray-500" oninput="document.getElementById('abs_z1_num').value=this.value; runAbsorber()">
+                            <input type="number" id="abs_z1_num" value="0.000" step="0.005" class="w-20 p-1.5 border rounded text-xs font-mono focus:ring-2 focus:ring-gray-500" oninput="document.getElementById('abs_z1').value=this.value; runAbsorber()">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto pt-4 flex flex-col gap-2">
+                        <button onclick="applyDenHartog()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="zap" class="w-4 h-4"></i> Den-Hartog Optimierung
+                        </button>
+                        <button onclick="transferAbsorberToMain()" class="w-full bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold py-2 px-4 rounded shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="arrow-up-left" class="w-4 h-4"></i> In Systemdefinition laden
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Graphen -->
+                <div class="lg:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-md font-bold text-slate-800">Vergrößerungsfaktor der Primärmasse</h3>
+                        <label class="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer hover:text-green-600">
+                            <input type="checkbox" id="chk_abs_x2" onchange="runAbsorber()" class="rounded text-green-600 focus:ring-green-500"> Auch Tilgermasse (V₂)
+                        </label>
+                    </div>
+                    <div class="flex-1 w-full min-h-[300px]">
+                        <canvas id="absorberChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Custom Modal für Eingaben -->
@@ -627,22 +553,23 @@
 
         let sysDoF = 2; 
         let sys = {
-            M: [[1, 0], [0, 1.5]],
-            C: [[0.5, -0.2], [-0.2, 0.6]],
-            K: [[200, -100], [-100, 150]]
+            M: [[1, 0, 0], [0, 1.5, 0], [0, 0, 1]],
+            C: [[0.5, -0.2, 0], [-0.2, 0.6, -0.1], [0, -0.1, 0.3]],
+            K: [[200, -100, 0], [-100, 150, -50], [0, -50, 100]]
         };
         
         let timeChartInst = null;
         let freqChartInst = null;
         let phaseChartInst = null; 
         let eigenChartInst = null;
-        let absorberChartInst = null; // NEU
+        let absorberChartInst = null;
         let timeSimData = null;
 
-        // --- Helper für Collapse/Expand (Dropdowns) ---
+        // --- Helper für Collapse/Expand (Dropdowns & Flyout) ---
         function toggleSection(contentId, iconId) {
             const content = document.getElementById(contentId);
             const icon = document.getElementById(iconId);
+            if (!content) return;
             if (content.classList.contains('hidden')) {
                 content.classList.remove('hidden');
                 if (icon) icon.classList.add('rotate-180');
@@ -650,6 +577,35 @@
                 content.classList.add('hidden');
                 if (icon) icon.classList.remove('rotate-180');
             }
+        }
+
+        function toggleSystemFlyout() {
+            const flyout = document.getElementById('system-flyout');
+            const backdrop = document.getElementById('flyout-backdrop');
+            if (flyout.classList.contains('-translate-x-full')) {
+                // Öffnen
+                flyout.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+            } else {
+                // Schließen
+                flyout.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        function applyChangesAndClose() {
+            saveSystem(); 
+            
+            const activeTab = document.querySelector('.tab-content.active').id;
+            if(activeTab === 'modal') calcModal();
+            else if(activeTab === 'time') runNewmark();
+            else if(activeTab === 'freq') runFRF();
+            else if(activeTab === 'absorber') runAbsorber();
+            
+            toggleSystemFlyout(); 
+            showToast("System aktualisiert!"); 
         }
 
         // --- Tastatur-Navigation für FRF Graphen ---
@@ -673,13 +629,10 @@
 
         function triggerCrossHover(idx) {
             if (!freqChartInst || !phaseChartInst) return;
-            
             const targetElsMag = freqChartInst.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
             const targetElsPh = phaseChartInst.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
-            
             freqChartInst.setActiveElements(targetElsMag);
             phaseChartInst.setActiveElements(targetElsPh);
-            
             const metaMag = freqChartInst.getDatasetMeta(0);
             if (metaMag && metaMag.data[idx]) {
                 freqChartInst.tooltip.setActiveElements(targetElsMag, {x: metaMag.data[idx].x, y: metaMag.data[idx].y});
@@ -688,7 +641,6 @@
             if (metaPh && metaPh.data[idx]) {
                 phaseChartInst.tooltip.setActiveElements(targetElsPh, {x: metaPh.data[idx].x, y: metaPh.data[idx].y});
             }
-            
             freqChartInst.update();
             phaseChartInst.update();
         }
@@ -696,19 +648,10 @@
         // --- Preset State Management ---
         let presets = [];
         let modalCallback = null;
-        const STORAGE_KEY = 'sd_presets_v1';
+        const STORAGE_KEY = 'sd_presets_v1_1';
 
-        function saveToLocalStorage() {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(presets)); } catch (e) { }
-        }
-
-        function loadFromLocalStorage() {
-            try {
-                const data = localStorage.getItem(STORAGE_KEY);
-                if (data) return JSON.parse(data);
-            } catch (e) { }
-            return null;
-        }
+        function saveToLocalStorage() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(presets)); } catch (e) { } }
+        function loadFromLocalStorage() { try { const d = localStorage.getItem(STORAGE_KEY); if (d) return JSON.parse(d); } catch (e) { } return null; }
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
@@ -722,15 +665,11 @@
             const input = document.getElementById('modal-input');
             input.value = defaultValue;
             document.getElementById('custom-modal').classList.remove('hidden');
-            input.focus();
-            input.select();
+            input.focus(); input.select();
             modalCallback = callback;
         }
 
-        function closeModal() {
-            document.getElementById('custom-modal').classList.add('hidden');
-            modalCallback = null;
-        }
+        function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); modalCallback = null; }
 
         document.getElementById('modal-submit').onclick = () => {
             if(modalCallback) modalCallback(document.getElementById('modal-input').value);
@@ -743,20 +682,20 @@
 
         function getSystemState() {
             const ids = [
-                'type_dof1', 'type_dof2',
-                'm11', 'm12', 'm21', 'm22',
-                'damping-type', 'zeta1', 'zeta2', 'rayleigh_a', 'rayleigh_b',
-                'c11', 'c12', 'c21', 'c22',
-                'k11', 'k12', 'k21', 'k22',
-                'evec_norm',
-                'exc_type', 't_end', 'dt',
+                'm11','m12','m13','m21','m22','m23','m31','m32','m33',
+                'damping-type', 'zeta1', 'zeta2', 'zeta3', 'rayleigh_a', 'rayleigh_b',
+                'c11','c12','c13','c21','c22','c23','c31','c32','c33',
+                'k11','k12','k13','k21','k22','k23','k31','k32','k33',
+                'evec_norm', 'exc_type', 't_end', 'dt',
+                'chk_f1_active', 'chk_f2_active', 'chk_f3_active',
                 'f1_amp', 'f1_func', 'f1_freq', 'f1_phase',
                 'f2_amp', 'f2_func', 'f2_freq', 'f2_phase',
+                'f3_amp', 'f3_func', 'f3_freq', 'f3_phase',
                 'param_eps', 'param_wp',
-                'x0_1', 'x0_2', 'v0_1', 'v0_2',
+                'x0_1', 'x0_2', 'x0_3', 'v0_1', 'v0_2', 'v0_3',
                 'w_max', 'dw', 'frf_type', 'frf_y_axis',
                 'chk_tot', 'chk_force', 'chk_forced', 'chk_free', 'chk_part', 'chk_hom',
-                'abs_mu', 'abs_beta', 'abs_z2', 'abs_z1', 'chk_abs_x2' // NEU: Absorber Params
+                'abs_mu', 'abs_beta', 'abs_z2', 'abs_z1', 'chk_abs_x2'
             ];
             let state = { sysDoF: sysDoF };
             ids.forEach(id => {
@@ -771,9 +710,7 @@
 
         function applySystemState(state) {
             if(!state) return;
-            
             if(state.sysDoF) setDoF(state.sysDoF);
-
             Object.keys(state).forEach(id => {
                 if(id === 'sysDoF') return;
                 const el = document.getElementById(id);
@@ -782,17 +719,30 @@
                     else el.value = state[id];
                 }
             });
-
-            updateLabels();
-            toggleDampingType();
-            toggleExcitationUI();
-            saveSystem();
+            updateLabels(); toggleDampingType(); toggleExcitationUI(); saveSystem();
+            
+            // Sync Checkboxes manually since setting state doesn't fire onchange
+            for(let i=1; i<=3; i++) {
+                let chk = document.getElementById(`chk_f${i}_active`);
+                if(chk) {
+                    if(state[`chk_f${i}_active`] !== undefined) {
+                        chk.checked = state[`chk_f${i}_active`];
+                    } else {
+                        chk.checked = true; // Fallback for old presets
+                    }
+                    toggleForceInput(i);
+                }
+            }
 
             const activeTab = document.querySelector('.tab-content.active').id;
             if(activeTab === 'modal') calcModal();
             else if(activeTab === 'time') runNewmark();
             else if(activeTab === 'freq') runFRF();
-            else if(activeTab === 'absorber') runAbsorber(); // NEU
+            else if(activeTab === 'absorber') runAbsorber();
+            
+            ['abs_mu', 'abs_beta', 'abs_z2', 'abs_z1'].forEach(id => {
+                if(document.getElementById(id+'_num') && state[id]) document.getElementById(id+'_num').value = parseFloat(state[id]).toFixed(3);
+            });
         }
 
         function updatePresetDropdown() {
@@ -800,8 +750,7 @@
             select.innerHTML = '';
             presets.forEach(p => {
                 const opt = document.createElement('option');
-                opt.value = p.id;
-                opt.innerText = p.name;
+                opt.value = p.id; opt.innerText = p.name;
                 select.appendChild(opt);
             });
         }
@@ -809,18 +758,12 @@
         function initPresets() {
             saveSystem();
             const stored = loadFromLocalStorage();
-            if (stored && stored.length > 0) {
-                presets = stored;
-            } else {
-                presets.push({
-                    id: 'preset_' + Date.now(),
-                    name: 'Standard 2-DoF',
-                    state: getSystemState()
-                });
+            if (stored && stored.length > 0) presets = stored;
+            else {
+                presets.push({ id: 'preset_' + Date.now(), name: 'Standard 2-DoF', state: getSystemState() });
                 saveToLocalStorage();
             }
-            updatePresetDropdown();
-            loadPreset();
+            updatePresetDropdown(); loadPreset();
         }
 
         function savePreset() {
@@ -828,10 +771,8 @@
                 if(name && name.trim()) {
                     const id = 'preset_' + Date.now();
                     presets.push({ id, name: name.trim(), state: getSystemState() });
-                    saveToLocalStorage();
-                    updatePresetDropdown();
-                    document.getElementById('preset_select').value = id;
-                    showToast("Preset gespeichert!");
+                    saveToLocalStorage(); updatePresetDropdown();
+                    document.getElementById('preset_select').value = id; showToast("Preset gespeichert!");
                 }
             });
         }
@@ -840,9 +781,7 @@
             const id = document.getElementById('preset_select').value;
             const preset = presets.find(p => p.id === id);
             if(preset) {
-                preset.state = getSystemState();
-                saveToLocalStorage();
-                showToast("Preset '" + preset.name + "' überschrieben!");
+                preset.state = getSystemState(); saveToLocalStorage(); showToast("Preset '" + preset.name + "' überschrieben!");
             }
         }
 
@@ -852,11 +791,8 @@
             if(preset) {
                 openModal("Preset umbenennen", preset.name, (newName) => {
                     if(newName && newName.trim()) {
-                        preset.name = newName.trim();
-                        saveToLocalStorage();
-                        updatePresetDropdown();
-                        document.getElementById('preset_select').value = id;
-                        showToast("Preset umbenannt!");
+                        preset.name = newName.trim(); saveToLocalStorage(); updatePresetDropdown();
+                        document.getElementById('preset_select').value = id; showToast("Preset umbenannt!");
                     }
                 });
             }
@@ -865,27 +801,17 @@
         function loadPreset() {
             const id = document.getElementById('preset_select').value;
             const preset = presets.find(p => p.id === id);
-            if(preset) {
-                applySystemState(preset.state);
-                showToast("Preset angewendet: " + preset.name);
-            }
+            if(preset) { applySystemState(preset.state); showToast("Preset angewendet: " + preset.name); }
         }
 
         function deletePreset() {
-            if(presets.length <= 1) {
-                showToast("Das letzte Preset kann nicht gelöscht werden.");
-                return;
-            }
+            if(presets.length <= 1) { showToast("Das letzte Preset kann nicht gelöscht werden."); return; }
             const id = document.getElementById('preset_select').value;
             const index = presets.findIndex(p => p.id === id);
             if(index > -1) {
-                const name = presets[index].name;
-                presets.splice(index, 1);
-                saveToLocalStorage();
-                updatePresetDropdown();
-                document.getElementById('preset_select').value = presets[0].id;
-                loadPreset();
-                showToast("Preset '" + name + "' gelöscht.");
+                const name = presets[index].name; presets.splice(index, 1);
+                saveToLocalStorage(); updatePresetDropdown();
+                document.getElementById('preset_select').value = presets[0].id; loadPreset(); showToast("Preset '" + name + "' gelöscht.");
             }
         }
 
@@ -893,28 +819,19 @@
             const dataStr = JSON.stringify(presets, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "sd_presets.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const a = document.createElement("a"); a.href = url; a.download = "sd_presets.json";
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
             showToast("Presets als Datei exportiert!");
         }
 
         function importPresets(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData) && importedData.length > 0 && importedData[0].id) {
-                        presets = importedData; 
-                        saveToLocalStorage();
-                        updatePresetDropdown();
-                        loadPreset();
+                        presets = importedData; saveToLocalStorage(); updatePresetDropdown(); loadPreset();
                         showToast(importedData.length + " Presets importiert!");
                     } else { showToast("Fehler: Ungültiges Dateiformat."); }
                 } catch (err) { showToast("Fehler beim Parsen der Datei."); }
@@ -927,69 +844,109 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            
-            const btns = ['system', 'modal', 'time', 'freq', 'absorber']; // NEU: absorber
+            const btns = ['modal', 'time', 'freq', 'absorber'];
             btns.forEach(id => {
                 const btn = document.getElementById('btn-' + id);
                 if (btn) {
                     if(id === tabId) {
-                        btn.classList.add('bg-blue-600', 'text-white');
-                        btn.classList.remove('text-slate-300', 'hover:bg-slate-700');
+                        btn.classList.add('bg-blue-600', 'text-white'); btn.classList.remove('text-slate-300', 'hover:bg-slate-700');
                     } else {
-                        btn.classList.remove('bg-blue-600', 'text-white');
-                        btn.classList.add('text-slate-300', 'hover:bg-slate-700');
+                        btn.classList.remove('bg-blue-600', 'text-white'); btn.classList.add('text-slate-300', 'hover:bg-slate-700');
                     }
                 }
             });
-
             if(tabId === 'modal') calcModal();
             if(tabId === 'time' && !timeSimData) runNewmark();
             if(tabId === 'freq' && !freqChartInst) runFRF();
-            if(tabId === 'absorber' && !absorberChartInst) runAbsorber(); // NEU
+            if(tabId === 'absorber' && !absorberChartInst) runAbsorber(); 
         }
 
         function toggleDampingType() {
             const type = document.getElementById('damping-type').value;
-            const cInputs = ['c11', 'c12', 'c21', 'c22'];
-            
-            document.getElementById('zeta-inputs').classList.add('hidden');
-            document.getElementById('zeta-inputs').classList.remove('flex');
-            document.getElementById('rayleigh-inputs').classList.add('hidden');
-            document.getElementById('rayleigh-inputs').classList.remove('flex');
+            const cInputs = ['c11','c12','c13','c21','c22','c23','c31','c32','c33'];
+            document.getElementById('zeta-inputs').classList.add('hidden'); document.getElementById('zeta-inputs').classList.remove('grid');
+            document.getElementById('rayleigh-inputs').classList.add('hidden'); document.getElementById('rayleigh-inputs').classList.remove('grid');
             
             if (type === 'ratio') {
-                document.getElementById('zeta-inputs').classList.remove('hidden');
-                document.getElementById('zeta-inputs').classList.add('flex');
-                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = true; el.classList.add('bg-gray-100', 'text-gray-500'); } });
+                document.getElementById('zeta-inputs').classList.remove('hidden'); document.getElementById('zeta-inputs').classList.add('grid');
+                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = true; el.classList.add('opacity-50'); } });
             } else if (type === 'rayleigh') {
-                document.getElementById('rayleigh-inputs').classList.remove('hidden');
-                document.getElementById('rayleigh-inputs').classList.add('flex');
-                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = true; el.classList.add('bg-gray-100', 'text-gray-500'); } });
+                document.getElementById('rayleigh-inputs').classList.remove('hidden'); document.getElementById('rayleigh-inputs').classList.add('grid');
+                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = true; el.classList.add('opacity-50'); } });
             } else {
-                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = false; el.classList.remove('bg-gray-100', 'text-gray-500'); } });
+                cInputs.forEach(id => { const el = document.getElementById(id); if(el) { el.readOnly = false; el.classList.remove('opacity-50'); } });
             }
+        }
+
+        function toggleForceInput(i) {
+            const chk = document.getElementById(`chk_f${i}_active`);
+            const grp = document.getElementById(`f${i}_input_group`);
+            if (chk && grp) {
+                grp.style.opacity = chk.checked ? '1' : '0.4';
+                grp.style.pointerEvents = chk.checked ? 'auto' : 'none';
+            }
+        }
+
+        function generateTimeDynamicInputs() {
+            let fHtml = '';
+            for(let i=1; i<=sysDoF; i++) {
+                fHtml += `
+                <div class="bg-white p-2 rounded border border-gray-200 shadow-sm">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-blue-600">Last DoF ${i}</label>
+                        <div class="flex items-center gap-1.5">
+                            <label for="chk_f${i}_active" class="text-[10px] text-gray-500 font-semibold cursor-pointer uppercase">Aktiv</label>
+                            <input type="checkbox" id="chk_f${i}_active" checked onchange="toggleForceInput(${i}); runNewmark();" class="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer border-gray-300">
+                        </div>
+                    </div>
+                    <div id="f${i}_input_group" class="flex items-center gap-1 bg-gray-50 p-1.5 rounded border transition-opacity duration-200">
+                        <input type="number" id="f${i}_amp" value="${i===1?10:0}" class="w-14 p-1 text-xs bg-white border border-gray-200 rounded focus:ring-1 focus:ring-blue-500" placeholder="A">
+                        <select id="f${i}_func" class="p-1 text-xs bg-white border border-gray-200 rounded focus:ring-1 focus:ring-blue-500"><option value="sin">sin(</option><option value="cos">cos(</option></select>
+                        <input type="number" id="f${i}_freq" value="10" class="w-12 p-1 text-xs bg-white border border-gray-200 rounded focus:ring-1 focus:ring-blue-500" placeholder="w"><span class="text-[10px] font-mono text-gray-600">t+</span>
+                        <input type="number" id="f${i}_phase" value="0" class="w-12 p-1 text-xs bg-white border border-gray-200 rounded focus:ring-1 focus:ring-blue-500" placeholder="ph"><span class="text-[10px] font-mono text-gray-600">&deg;)</span>
+                    </div>
+                </div>`;
+            }
+            document.getElementById('force-inputs-container').innerHTML = fHtml;
+            for(let i=1; i<=sysDoF; i++) toggleForceInput(i); // Initial setup
+
+            let icHtml = '';
+            for(let i=1; i<=sysDoF; i++) {
+                icHtml += `
+                <div><label class="block text-[10px] font-semibold text-gray-500 mb-1">Pos ${i}(0)</label><input type="number" id="x0_${i}" value="0" step="0.1" class="w-full p-1.5 border border-gray-200 text-xs rounded focus:ring-1 focus:ring-blue-500 bg-white"></div>
+                <div><label class="block text-[10px] font-semibold text-gray-500 mb-1">V ${i}(0)</label><input type="number" id="v0_${i}" value="0" step="0.1" class="w-full p-1.5 border border-gray-200 text-xs rounded focus:ring-1 focus:ring-blue-500 bg-white"></div>
+                `;
+            }
+            document.getElementById('ic-grid').innerHTML = icHtml;
         }
 
         function setDoF(dof) {
             sysDoF = dof;
-            document.getElementById('system-title').innerText = `${dof}-DoF Systemdefinition`;
-            const btn1 = document.getElementById('btn-dof1');
-            const btn2 = document.getElementById('btn-dof2');
-            if (dof === 1) {
-                btn1.classList.add('bg-white', 'text-blue-600', 'shadow-sm'); btn1.classList.remove('text-gray-600');
-                btn2.classList.remove('bg-white', 'text-blue-600', 'shadow-sm'); btn2.classList.add('text-gray-600');
-            } else {
-                btn2.classList.add('bg-white', 'text-blue-600', 'shadow-sm'); btn2.classList.remove('text-gray-600');
-                btn1.classList.remove('bg-white', 'text-blue-600', 'shadow-sm'); btn1.classList.add('text-gray-600');
-            }
-            document.querySelectorAll('.dof-2-only').forEach(el => { el.style.display = dof === 1 ? 'none' : 'block'; });
+
+            // UI Buttons anpassen
+            [1, 2, 3].forEach(i => {
+                const btn = document.getElementById('btn-dof' + i);
+                if (btn) {
+                    if (i === dof) {
+                        btn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                        btn.classList.remove('text-gray-600');
+                    } else {
+                        btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                        btn.classList.add('text-gray-600');
+                    }
+                }
+            });
+
+            document.querySelectorAll('.req-dof-2').forEach(el => el.style.display = dof >= 2 ? '' : 'none');
+            document.querySelectorAll('.req-dof-3').forEach(el => el.style.display = dof >= 3 ? '' : 'none');
+            
             ['m-grid', 'c-grid', 'k-grid'].forEach(id => {
                 const grid = document.getElementById(id);
-                if (dof === 1) { grid.classList.remove('grid-cols-2'); grid.classList.add('grid-cols-1'); } 
-                else { grid.classList.add('grid-cols-2'); grid.classList.remove('grid-cols-1'); }
+                grid.className = `grid gap-1.5 grid-cols-${dof}`;
             });
-            updateLabels();
-            saveSystem();
+
+            generateTimeDynamicInputs();
+            updateLabels(); saveSystem();
         }
 
         function toggleExcitationUI() {
@@ -998,184 +955,247 @@
             document.getElementById('ui_free').classList.add('hidden');
             document.getElementById('ui_param').classList.add('hidden');
 
-            const overlayOpts = document.getElementById('overlay-options');
-            
             if(type === 'forced') {
                 document.getElementById('ui_forced').classList.remove('hidden');
-                document.getElementById('ui_forced').classList.add('grid');
-                overlayOpts.style.opacity = '1';
-                overlayOpts.style.pointerEvents = 'auto';
             } else if(type === 'free') {
                 document.getElementById('ui_free').classList.remove('hidden');
-                overlayOpts.style.opacity = '1';
-                overlayOpts.style.pointerEvents = 'auto';
             } else if(type === 'param') {
-                document.getElementById('ui_param').classList.remove('hidden');
-                document.getElementById('ui_param').classList.add('grid');
-                overlayOpts.style.opacity = '0.5'; 
-                overlayOpts.style.pointerEvents = 'none';
-                document.getElementById('chk_tot').checked = true;
-                document.getElementById('chk_part').checked = false;
-                document.getElementById('chk_hom').checked = false;
-                document.getElementById('chk_forced').checked = false;
-                document.getElementById('chk_free').checked = false;
-                document.getElementById('chk_force').checked = false;
+                document.getElementById('ui_param').classList.remove('hidden'); document.getElementById('ui_param').classList.add('grid');
             }
         }
 
         function updateLabels() {
-            const t1 = document.getElementById('type_dof1').value;
-            const t2 = sysDoF === 2 ? document.getElementById('type_dof2').value : t1;
-
-            let unitM = "", unitC = "", unitK = "";
-            if(t1 === 'trans' && t2 === 'trans') { unitM = "(kg)"; unitC = "(Ns/m)"; unitK = "(N/m)"; }
-            else if(t1 === 'rot' && t2 === 'rot') { unitM = "(kg·m²)"; unitC = "(Nms/rad)"; unitK = "(Nm/rad)"; }
-            else { unitM = "(Gemischt)"; unitC = "(Gemischt)"; unitK = "(Gemischt)"; }
-            
-            document.getElementById('unit-m').innerText = unitM;
-            document.getElementById('unit-c').innerText = unitC;
-            document.getElementById('unit-k').innerText = unitK;
-
-            document.getElementById('lbl_x0_1').innerText = t1 === 'trans' ? "Pos. x₁(0) [m]" : "Winkel &varphi;₁(0) [rad]";
-            document.getElementById('lbl_v0_1').innerText = t1 === 'trans' ? "Geschw. v₁(0) [m/s]" : "Wink.Geschw. &omega;₁(0) [rad/s]";
-            document.getElementById('label-f1').innerText = t1 === 'trans' ? "Erregerkraft F₁(t) [N]" : "Erregermoment M₁(t) [Nm]";
-
-            if(sysDoF === 2) {
-                document.getElementById('lbl_x0_2').innerText = t2 === 'trans' ? "Pos. x₂(0) [m]" : "Winkel &varphi;₂(0) [rad]";
-                document.getElementById('lbl_v0_2').innerText = t2 === 'trans' ? "Geschw. v₂(0) [m/s]" : "Wink.Geschw. &omega;₂(0) [rad/s]";
-                const elF2 = document.getElementById('label-f2');
-                if(elF2) elF2.innerText = t2 === 'trans' ? "Erregerkraft F₂(t) [N]" : "Erregermoment M₂(t) [Nm]";
-            }
-        }
-
-        function computeModalDamping(M, K, zeta1, zeta2) {
-            const A = M[0][0]*M[1][1] - M[0][1]*M[1][0];
-            const B = M[0][1]*K[1][0] + M[1][0]*K[0][1] - M[0][0]*K[1][1] - M[1][1]*K[0][0];
-            const C_det = K[0][0]*K[1][1] - K[0][1]*K[1][0];
-
-            const discriminant = B*B - 4*A*C_det;
-            if (discriminant < 0) return [[0,0],[0,0]];
-
-            const lambda1 = (-B - Math.sqrt(discriminant)) / (2*A);
-            const lambda2 = (-B + Math.sqrt(discriminant)) / (2*A);
-
-            const w1 = Math.sqrt(Math.max(0, lambda1));
-            const w2 = Math.sqrt(Math.max(0, lambda2));
-
-            let phi1_2 = -(K[0][0] - lambda1*M[0][0]) / (K[0][1] - lambda1*M[0][1] || 1e-10);
-            let phi2_2 = -(K[0][0] - lambda2*M[0][0]) / (K[0][1] - lambda2*M[0][1] || 1e-10);
-
-            let phi1 = [1, phi1_2]; let phi2 = [1, phi2_2];
-
-            let m1 = phi1[0]*M[0][0]*phi1[0] + phi1[0]*M[0][1]*phi1[1] + phi1[1]*M[1][0]*phi1[0] + phi1[1]*M[1][1]*phi1[1];
-            let m2 = phi2[0]*M[0][0]*phi2[0] + phi2[0]*M[0][1]*phi2[1] + phi2[1]*M[1][0]*phi2[0] + phi2[1]*M[1][1]*phi2[1];
-
-            let psi1 = [phi1[0]/Math.sqrt(m1), phi1[1]/Math.sqrt(m1)];
-            let psi2 = [phi2[0]/Math.sqrt(m2), phi2[1]/Math.sqrt(m2)];
-
-            let Psi = math.matrix([[psi1[0], psi2[0]], [psi1[1], psi2[1]]]);
-            let PsiT = math.transpose(Psi);
-            let M_mat = math.matrix(M);
-
-            let ZW = math.matrix([[2*zeta1*w1, 0], [0, 2*zeta2*w2]]);
-            let temp = math.multiply(M_mat, Psi);
-            temp = math.multiply(temp, ZW);
-            temp = math.multiply(temp, PsiT);
-            let C_mat = math.multiply(temp, M_mat);
-
-            return C_mat.toArray ? C_mat.toArray() : Array.from(C_mat);
+            const unitM = document.getElementById('unit-m');
+            if (unitM) unitM.innerText = "(kg)";
         }
 
         function saveSystem() {
-            const dampingType = document.getElementById('damping-type').value;
+            const dt = document.getElementById('damping-type').value;
+            let M = [], C = [], K = [];
+            for(let i=1; i<=sysDoF; i++) {
+                let mRow=[], cRow=[], kRow=[];
+                for(let j=1; j<=sysDoF; j++) {
+                    mRow.push(parseFloat(document.getElementById(`m${i}${j}`).value)||0);
+                    cRow.push(parseFloat(document.getElementById(`c${i}${j}`).value)||0);
+                    kRow.push(parseFloat(document.getElementById(`k${i}${j}`).value)||0);
+                }
+                M.push(mRow); C.push(cRow); K.push(kRow);
+            }
+            sys.M = M; sys.K = K;
 
-            if (sysDoF === 1) {
-                sys.M = [[parseFloat(document.getElementById('m11').value)]];
-                sys.K = [[parseFloat(document.getElementById('k11').value)]];
-                
-                if (dampingType === 'ratio') {
-                    let z1 = parseFloat(document.getElementById('zeta1').value) || 0;
-                    let c_val = 2 * z1 * Math.sqrt(sys.K[0][0] * sys.M[0][0]);
-                    sys.C = [[c_val]]; document.getElementById('c11').value = c_val.toFixed(3);
-                } else if (dampingType === 'rayleigh') {
-                    let a = parseFloat(document.getElementById('rayleigh_a').value) || 0;
-                    let b = parseFloat(document.getElementById('rayleigh_b').value) || 0;
-                    let c_val = a * sys.M[0][0] + b * sys.K[0][0];
-                    sys.C = [[c_val]]; document.getElementById('c11').value = c_val.toFixed(3);
-                } else {
-                    sys.C = [[parseFloat(document.getElementById('c11').value)]];
-                }
+            if (dt === 'rayleigh') {
+                let a = parseFloat(document.getElementById('rayleigh_a').value)||0;
+                let b = parseFloat(document.getElementById('rayleigh_b').value)||0;
+                let C_mat = math.add(math.multiply(a, math.matrix(M)), math.multiply(b, math.matrix(K)));
+                sys.C = C_mat.toArray();
+                for(let i=1; i<=sysDoF; i++) for(let j=1; j<=sysDoF; j++) document.getElementById(`c${i}${j}`).value = sys.C[i-1][j-1].toFixed(4);
+            } else if (dt === 'ratio') {
+                sys.C = C;
             } else {
-                sys.M = [
-                    [parseFloat(document.getElementById('m11').value), parseFloat(document.getElementById('m12').value)],
-                    [parseFloat(document.getElementById('m21').value), parseFloat(document.getElementById('m22').value)]
-                ];
-                sys.K = [
-                    [parseFloat(document.getElementById('k11').value), parseFloat(document.getElementById('k12').value)],
-                    [parseFloat(document.getElementById('k21').value), parseFloat(document.getElementById('k22').value)]
-                ];
-                
-                if (dampingType === 'ratio') {
-                    let z1 = parseFloat(document.getElementById('zeta1').value) || 0;
-                    let z2 = parseFloat(document.getElementById('zeta2').value) || 0;
-                    let c_mat = computeModalDamping(sys.M, sys.K, z1, z2);
-                    sys.C = c_mat;
-                    document.getElementById('c11').value = c_mat[0][0].toFixed(3);
-                    document.getElementById('c12').value = c_mat[0][1].toFixed(3);
-                    document.getElementById('c21').value = c_mat[1][0].toFixed(3);
-                    document.getElementById('c22').value = c_mat[1][1].toFixed(3);
-                } else if (dampingType === 'rayleigh') {
-                    let a = parseFloat(document.getElementById('rayleigh_a').value) || 0;
-                    let b = parseFloat(document.getElementById('rayleigh_b').value) || 0;
-                    let C_mat = math.add(math.multiply(a, math.matrix(sys.M)), math.multiply(b, math.matrix(sys.K)));
-                    let c_arr = C_mat.toArray ? C_mat.toArray() : Array.from(C_mat);
-                    sys.C = c_arr;
-                    document.getElementById('c11').value = c_arr[0][0].toFixed(3);
-                    document.getElementById('c12').value = c_arr[0][1].toFixed(3);
-                    document.getElementById('c21').value = c_arr[1][0].toFixed(3);
-                    document.getElementById('c22').value = c_arr[1][1].toFixed(3);
-                } else {
-                    sys.C = [
-                        [parseFloat(document.getElementById('c11').value), parseFloat(document.getElementById('c12').value)],
-                        [parseFloat(document.getElementById('c21').value), parseFloat(document.getElementById('c22').value)]
-                    ];
-                }
+                sys.C = C;
             }
         }
 
-        function findRootsQuartic(c4, c3, c2, c1, c0) {
-            if(Math.abs(c4) < 1e-12) return []; 
-            let a = c3/c4, b = c2/c4, c = c1/c4, d = c0/c4;
-            let roots = [
-                math.complex(0.4, 0.9),
-                math.complex(-0.4, -0.9),
-                math.complex(0.9, -0.4),
-                math.complex(-0.9, 0.4)
-            ];
-            for(let iter=0; iter<50; iter++) {
+        // --- Polynom Mathematik für 3-DoF Modalanalyse ---
+        function polyAdd(a, b) {
+            let max = Math.max(a.length, b.length); let res = new Array(max).fill(math.complex(0,0));
+            for(let i=0;i<a.length;i++) res[i + max - a.length] = math.add(res[i + max - a.length], a[i]);
+            for(let i=0;i<b.length;i++) res[i + max - b.length] = math.add(res[i + max - b.length], b[i]);
+            return res;
+        }
+        function polySub(a, b) {
+            let max = Math.max(a.length, b.length); let res = new Array(max).fill(math.complex(0,0));
+            for(let i=0;i<a.length;i++) res[i + max - a.length] = math.add(res[i + max - a.length], a[i]);
+            for(let i=0;i<b.length;i++) res[i + max - b.length] = math.subtract(res[i + max - b.length], b[i]);
+            return res;
+        }
+        function polyMul(a, b) {
+            if(a.length===0 || b.length===0) return [];
+            let res = new Array(a.length + b.length - 1).fill(math.complex(0,0));
+            for(let i=0;i<a.length;i++) for(let j=0;j<b.length;j++) res[i+j] = math.add(res[i+j], math.multiply(a[i],b[j]));
+            return res;
+        }
+        function findRootsDurandKerner(coeffs) {
+            let n = coeffs.length - 1;
+            if(math.abs(coeffs[0]) < 1e-12) return [];
+            let a = coeffs.map(c => math.divide(c, coeffs[0]));
+            let roots = [];
+            for(let k=0; k<n; k++) {
+                let angle = 2 * Math.PI * k / n;
+                roots.push(math.complex(0.4 * Math.cos(angle) + 0.1, 0.9 * Math.sin(angle) - 0.2));
+            }
+            for(let iter=0; iter<100; iter++) {
                 let nextRoots = [];
-                for(let i=0; i<4; i++) {
+                for(let i=0; i<n; i++) {
                     let R = roots[i];
-                    let R2 = math.multiply(R, R);
-                    let R3 = math.multiply(R2, R);
-                    let R4 = math.multiply(R3, R);
-
-                    let p3 = math.multiply(a, R3);
-                    let p2 = math.multiply(b, R2);
-                    let p1 = math.multiply(c, R);
-
-                    let P_R = math.add(math.add(math.add(math.add(R4, p3), p2), p1), d);
-
-                    let den = math.complex(1, 0);
-                    for(let j=0; j<4; j++) {
-                        if(i !== j) den = math.multiply(den, math.subtract(R, roots[j]));
-                    }
-                    let diff = math.divide(P_R, den);
-                    nextRoots.push(math.subtract(R, diff));
+                    let P_R = math.complex(0,0);
+                    for (let j=0; j<=n; j++) P_R = math.add(math.multiply(P_R, R), a[j]);
+                    let den = math.complex(1,0);
+                    for(let j=0; j<n; j++) if (i !== j) den = math.multiply(den, math.subtract(R, roots[j]));
+                    nextRoots.push(math.subtract(R, math.divide(P_R, den)));
                 }
                 roots = nextRoots;
             }
-            return roots.map(r => ({ re: r.re, im: r.im }));
+            return roots;
+        }
+
+        function calcModal() {
+            saveSystem();
+            let htmlContent = ''; let complexRoots = [];
+            const normType = document.getElementById('evec_norm') ? document.getElementById('evec_norm').value : 'mass';
+            let normLabel = normType === 'mass' ? 'Massen-normiert' : 'Unity-normiert';
+            document.getElementById('modal-matrices-container').classList.add('hidden');
+
+            const M = sys.M; const C = sys.C; const K = sys.K;
+            let Z_poly = [];
+            for(let i=0;i<sysDoF;i++) {
+                Z_poly.push([]);
+                for(let j=0;j<sysDoF;j++) Z_poly[i].push([math.complex(M[i][j],0), math.complex(C[i][j],0), math.complex(K[i][j],0)]);
+            }
+
+            let detPoly = [];
+            if(sysDoF === 1) detPoly = Z_poly[0][0];
+            else if(sysDoF === 2) {
+                detPoly = polySub(polyMul(Z_poly[0][0], Z_poly[1][1]), polyMul(Z_poly[0][1], Z_poly[1][0]));
+            } else if(sysDoF === 3) {
+                let t1 = polyMul(Z_poly[0][0], polySub(polyMul(Z_poly[1][1], Z_poly[2][2]), polyMul(Z_poly[1][2], Z_poly[2][1])));
+                let t2 = polyMul(Z_poly[0][1], polySub(polyMul(Z_poly[1][0], Z_poly[2][2]), polyMul(Z_poly[1][2], Z_poly[2][0])));
+                let t3 = polyMul(Z_poly[0][2], polySub(polyMul(Z_poly[1][0], Z_poly[2][1]), polyMul(Z_poly[1][1], Z_poly[2][0])));
+                detPoly = polyAdd(polySub(t1, t2), t3);
+            }
+
+            complexRoots = findRootsDurandKerner(detPoly);
+            
+            let sortedRoots = []; let skip = [];
+            for(let i=0; i<complexRoots.length; i++) {
+                if(skip.includes(i)) continue;
+                let r = complexRoots[i];
+                for(let j=i+1; j<complexRoots.length; j++) {
+                    if(!skip.includes(j) && Math.abs(r.re - complexRoots[j].re) < 1e-4 && Math.abs(r.im + complexRoots[j].im) < 1e-4 && r.im !== 0) {
+                        skip.push(j); break;
+                    }
+                }
+                sortedRoots.push(r);
+            }
+            sortedRoots.sort((a,b) => math.abs(a) - math.abs(b));
+
+            let PhiVectors = [];
+            let formatCplx = (c) => {
+                let reStr = c.re.toFixed(4);
+                let imStr = Math.abs(c.im) < 1e-4 ? '' : (c.im > 0 ? ` + ${c.im.toFixed(4)}j` : ` - ${Math.abs(c.im).toFixed(4)}j`);
+                return reStr + imStr;
+            };
+
+            for(let modeIndex=0; modeIndex<sortedRoots.length; modeIndex++) {
+                let L = sortedRoots[modeIndex];
+                let wn = math.abs(L); let fn = wn / (2*Math.PI);
+                let titleStr = `&lambda;<sub>${modeIndex+1}</sub> = ${formatCplx(L)}`;
+                if(Math.abs(L.im) > 1e-4) titleStr = `&lambda;<sub>${modeIndex+1}</sub> = ${L.re.toFixed(4)} &plusmn; ${Math.abs(L.im).toFixed(4)}j`;
+
+                let vec = [];
+                if (sysDoF === 1) vec = [math.complex(1,0)];
+                else {
+                    let Z = [];
+                    for(let i=0;i<sysDoF;i++) {
+                        Z.push([]);
+                        for(let j=0;j<sysDoF;j++) {
+                            let L2 = math.multiply(L, L);
+                            Z[i].push(math.add(math.add(math.multiply(L2, M[i][j]), math.multiply(L, C[i][j])), K[i][j]));
+                        }
+                    }
+                    if (sysDoF === 2) {
+                        if (math.abs(Z[0][1]) > math.abs(Z[1][1])) vec = [math.complex(1,0), math.multiply(math.complex(-1,0), math.divide(Z[0][0], Z[0][1]))];
+                        else vec = [math.complex(1,0), math.multiply(math.complex(-1,0), math.divide(Z[1][0], Z[1][1]))];
+                    } else if (sysDoF === 3) {
+                        let adj00 = math.subtract(math.multiply(Z[1][1], Z[2][2]), math.multiply(Z[1][2], Z[2][1]));
+                        let adj10 = math.multiply(math.complex(-1,0), math.subtract(math.multiply(Z[1][0], Z[2][2]), math.multiply(Z[1][2], Z[2][0])));
+                        let adj20 = math.subtract(math.multiply(Z[1][0], Z[2][1]), math.multiply(Z[1][1], Z[2][0]));
+                        vec = [adj00, adj10, adj20];
+                    }
+                }
+
+                if (normType === 'unity') {
+                    let maxIdx = 0; let maxVal = -1;
+                    for(let i=0;i<sysDoF;i++) { if(math.abs(vec[i])>maxVal) {maxVal=math.abs(vec[i]); maxIdx=i;} }
+                    let scale = vec[maxIdx];
+                    if(math.abs(scale)>1e-10) for(let i=0;i<sysDoF;i++) vec[i] = math.divide(vec[i], scale);
+                } else {
+                    let m_r = math.complex(0,0);
+                    for(let i=0;i<sysDoF;i++) {
+                        let rowSum = math.complex(0,0);
+                        for(let j=0;j<sysDoF;j++) rowSum = math.add(rowSum, math.multiply(M[i][j], vec[j]));
+                        m_r = math.add(m_r, math.multiply(vec[i], rowSum));
+                    }
+                    let sqrt_mr = math.sqrt(m_r);
+                    if(math.abs(sqrt_mr)>1e-10) for(let i=0;i<sysDoF;i++) vec[i] = math.divide(vec[i], sqrt_mr);
+                }
+
+                for(let i=0;i<sysDoF;i++) if(Math.abs(vec[i].im)<1e-4) vec[i].im = 0;
+                PhiVectors.push(vec);
+
+                let evecHtml = vec.map(v => `<div>${formatCplx(v)}</div>`).join('');
+                
+                htmlContent += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-blue-100 border-t-4 border-t-blue-500 flex flex-col">
+                        <h3 class="font-bold text-lg mb-2 text-slate-800">Mode ${modeIndex+1}</h3>
+                        <p class="text-xs text-gray-600 flex justify-between mb-1"><span>&omega;n:</span> <span class="font-mono font-bold">${wn.toFixed(3)} rad/s</span></p>
+                        <p class="text-xs text-gray-600 flex justify-between mb-3"><span>fn:</span> <span class="font-mono font-bold">${fn.toFixed(3)} Hz</span></p>
+                        
+                        <div class="bg-blue-50 p-2 rounded border border-blue-100 text-center mb-2">
+                            <span class="font-bold text-blue-900 text-xs">${titleStr}</span>
+                        </div>
+                        
+                        <span class="text-[10px] text-gray-500 mb-1">${normLabel} &Psi;<sub>${modeIndex+1}</sub>:</span>
+                        <div class="matrix-input text-center bg-gray-50 p-1 rounded w-full font-mono text-xs">
+                            ${evecHtml}
+                        </div>
+                    </div>`;
+            }
+            document.getElementById('modal-results').innerHTML = htmlContent;
+
+            if (PhiVectors.length === sysDoF) {
+                let PhiMat = [];
+                for(let i=0;i<sysDoF;i++) { PhiMat.push([]); for(let j=0;j<sysDoF;j++) PhiMat[i].push(PhiVectors[j][i]); } 
+                
+                let muHtml = `<div class="grid grid-cols-${sysDoF} gap-2">`;
+                let kapHtml = `<div class="grid grid-cols-${sysDoF} gap-2">`;
+                
+                for(let i=0;i<sysDoF;i++) {
+                    for(let j=0;j<sysDoF;j++) {
+                        let mu_val=math.complex(0,0), kap_val=math.complex(0,0);
+                        for(let r=0;r<sysDoF;r++) {
+                            for(let c=0;c<sysDoF;c++) {
+                                mu_val = math.add(mu_val, math.multiply(math.multiply(PhiMat[r][i], M[r][c]), PhiMat[c][j]));
+                                kap_val = math.add(kap_val, math.multiply(math.multiply(PhiMat[r][i], K[r][c]), PhiMat[c][j]));
+                            }
+                        }
+                        let muAbs = math.abs(mu_val); let kapAbs = math.abs(kap_val);
+                        let isDiag = (i===j);
+                        let muColor = isDiag ? (normType==='mass'?'text-green-600 font-bold':'font-bold') : (muAbs<1e-3?'text-gray-300':'text-red-500 font-bold');
+                        let kapColor = isDiag ? 'text-blue-600 font-bold' : (kapAbs<1e-3?'text-gray-300':'text-red-500 font-bold');
+                        
+                        muHtml += `<div class="${muColor}">${muAbs.toFixed(3)}</div>`;
+                        kapHtml += `<div class="${kapColor}">${kapAbs.toFixed(1)}</div>`;
+                    }
+                }
+                muHtml += `</div>`; kapHtml += `</div>`;
+
+                document.getElementById('modal-matrices-content').innerHTML = `
+                    <div><h4 class="text-xs font-semibold text-gray-700 mb-2 text-center">&mu; = &Phi;<sup>T</sup> M &Phi;</h4><div class="matrix-input text-center font-mono bg-white p-2 rounded shadow-sm w-full">${muHtml}</div></div>
+                    <div><h4 class="text-xs font-semibold text-gray-700 mb-2 text-center">&kappa; = &Phi;<sup>T</sup> K &Phi;</h4><div class="matrix-input text-center font-mono bg-white p-2 rounded shadow-sm w-full">${kapHtml}</div></div>
+                `;
+                document.getElementById('modal-matrices-container').classList.remove('hidden');
+            }
+
+            plotEigenvalues(complexRoots);
+            
+            let rootsHtml = '';
+            sortedRoots.forEach((r, idx) => {
+                let re = r.re.toFixed(4); let im = Math.abs(r.im).toFixed(4);
+                let sign = r.im >= 0 ? '+' : '-';
+                rootsHtml += `<div class="bg-gray-50 p-2 rounded border font-mono text-xs text-center">&lambda;<sub>${idx+1}</sub> = ${re} ${sign} ${im}j</div>`;
+            });
+            document.getElementById('eigenvalues-list').innerHTML = rootsHtml;
         }
 
         function plotEigenvalues(roots) {
@@ -1183,413 +1203,58 @@
             if (!canvasEl) return;
             const ctx = canvasEl.getContext('2d');
             if(eigenChartInst) eigenChartInst.destroy();
-
             let dataPoints = roots.map(r => ({ x: r.re, y: r.im }));
-
             eigenChartInst = new Chart(ctx, {
                 type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Polstellen λ',
-                        data: dataPoints,
-                        backgroundColor: '#ef4444', 
-                        borderColor: '#991b1b', 
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        pointStyle: 'crossRot', 
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (ctx) => `λ = ${ctx.raw.x.toFixed(3)} ${ctx.raw.y >= 0 ? '+' : ''}${ctx.raw.y.toFixed(3)}j`
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Realteil σ (Dämpfung/Abklingen)' },
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#1f2937' : '#e5e7eb', 
-                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
-                            }
-                        },
-                        y: {
-                            title: { display: true, text: 'Imaginärteil jω (Schwingfrequenz)' },
-                            grid: {
-                                color: (ctx) => ctx.tick.value === 0 ? '#1f2937' : '#e5e7eb', 
-                                lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1
-                            }
-                        }
-                    }
-                }
+                data: { datasets: [{ label: 'Polstellen λ', data: dataPoints, backgroundColor: '#ef4444', borderColor: '#991b1b', pointRadius: 6, pointStyle: 'crossRot', borderWidth: 2 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Realteil σ' } }, y: { title: { display: true, text: 'Imaginärteil jω' } } } }
             });
-        }
-
-        function calcModal() {
-            let htmlContent = '';
-            let complexRoots = [];
-            
-            const normType = document.getElementById('evec_norm') ? document.getElementById('evec_norm').value : 'mass';
-            let normLabel = normType === 'mass' ? 'Massennormierter' : 'Unity-normierter';
-
-            document.getElementById('modal-matrices-container').classList.add('hidden');
-
-            if (sysDoF === 1) {
-                const m = sys.M[0][0]; const c = sys.C[0][0]; const k = sys.K[0][0];
-                const wn = Math.sqrt(k / m); const fn = wn / (2 * Math.PI); const zeta = c / (2 * Math.sqrt(k * m));
-
-                let phi_val = normType === 'mass' ? 1 / Math.sqrt(m) : 1;
-
-                let D = c*c - 4*m*k;
-                if(D < 0) {
-                    let im = Math.sqrt(-D)/(2*m);
-                    let re = -c/(2*m);
-                    complexRoots.push({re: re, im: im}, {re: re, im: -im});
-                } else {
-                    complexRoots.push({re: (-c + Math.sqrt(D))/(2*m), im: 0}, {re: (-c - Math.sqrt(D))/(2*m), im: 0});
-                }
-
-                htmlContent = `
-                    <div class="col-span-2 bg-white p-6 rounded-xl shadow-sm border border-blue-100 border-t-4 border-t-blue-500">
-                        <h3 class="font-bold text-xl mb-6 text-blue-900">1-DoF Modalparameter</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-sm text-gray-500 mb-1">Unged. Eigenkreisfreq. (&omega;n)</p>
-                                <p class="text-2xl font-mono font-semibold">${wn.toFixed(3)} <span class="text-sm">rad/s</span></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-sm text-gray-500 mb-1">Unged. Eigenfrequenz (fn)</p>
-                                <p class="text-2xl font-mono font-semibold">${fn.toFixed(3)} <span class="text-sm">Hz</span></p>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <p class="text-sm text-gray-500 mb-1">Dämpfungsmaß (&zeta;)</p>
-                                <p class="text-2xl font-mono font-semibold">${(zeta*100).toFixed(2)} %</p>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-blue-100">
-                            <p class="text-xs text-gray-500 font-sans mb-1">${normLabel} Eigenvektor &Phi;₁:</p>
-                            <div class="matrix-input text-center font-mono bg-white p-1 rounded inline-block"><div>${phi_val.toFixed(4)}</div></div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                const M = sys.M; const K = sys.K; const C = sys.C;
-                
-                const A = M[0][0]*M[1][1] - M[0][1]*M[1][0];
-                const B = M[0][1]*K[1][0] + M[1][0]*K[0][1] - M[0][0]*K[1][1] - M[1][1]*K[0][0];
-                const C_det = K[0][0]*K[1][1] - K[0][1]*K[1][0];
-                const discriminant = B*B - 4*A*C_det;
-                
-                if (discriminant < 0) {
-                    htmlContent = `<div class="col-span-2 p-4 bg-red-100 text-red-700 rounded-lg">Komplexe (ungedämpfte) Eigenwerte gefunden. Steifigkeitsmatrix ggf. instabil.</div>`;
-                } else {
-                    const l1 = (-B - Math.sqrt(discriminant)) / (2*A); const l2 = (-B + Math.sqrt(discriminant)) / (2*A);
-                    const w1 = Math.sqrt(Math.max(0, l1)); const w2 = Math.sqrt(Math.max(0, l2));
-                    const f1 = w1 / (2*Math.PI); const f2 = w2 / (2*Math.PI);
-
-                    let p12 = -(K[0][0] - l1*M[0][0]) / (K[0][1] - l1*M[0][1] || 1e-10);
-                    let p22 = -(K[0][0] - l2*M[0][0]) / (K[0][1] - l2*M[0][1] || 1e-10);
-                    
-                    let phi1 = [1, p12]; let phi2 = [1, p22];
-
-                    if (normType === 'unity') {
-                        if (Math.abs(phi1[1]) > Math.abs(phi1[0])) { phi1 = [phi1[0]/phi1[1], 1]; }
-                        if (Math.abs(phi2[1]) > Math.abs(phi2[0])) { phi2 = [phi2[0]/phi2[1], 1]; }
-                    }
-                    
-                    let mode1, mode2;
-                    if (normType === 'mass') {
-                        let m1 = phi1[0]*M[0][0]*phi1[0] + phi1[0]*M[0][1]*phi1[1] + phi1[1]*M[1][0]*phi1[0] + phi1[1]*M[1][1]*phi1[1];
-                        let m2 = phi2[0]*M[0][0]*phi2[0] + phi2[0]*M[0][1]*phi2[1] + phi2[1]*M[1][0]*phi2[0] + phi2[1]*M[1][1]*phi2[1];
-                        mode1 = [phi1[0]/Math.sqrt(m1), phi1[1]/Math.sqrt(m1)];
-                        mode2 = [phi2[0]/Math.sqrt(m2), phi2[1]/Math.sqrt(m2)];
-                    } else {
-                        mode1 = phi1;
-                        mode2 = phi2;
-                    }
-
-                    htmlContent = `
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 border-t-4 border-t-blue-500">
-                            <h3 class="font-bold text-xl mb-2 text-blue-900">Mode 1 (Ungedämpft)</h3>
-                            <div class="mb-4">
-                                <p class="text-gray-600 flex justify-between"><span>Eigenkreisfreq. (&omega;n₁):</span> <span class="font-mono font-semibold">${w1.toFixed(3)} rad/s</span></p>
-                                <p class="text-gray-600 flex justify-between"><span>Eigenfrequenz (fn₁):</span> <span class="font-mono font-semibold">${f1.toFixed(3)} Hz</span></p>
-                            </div>
-                            <h4 class="text-xs font-semibold text-gray-500 mb-2">${normLabel} Eigenvektor &Phi;₁:</h4>
-                            <div class="matrix-input text-center font-mono bg-gray-50 p-2 rounded w-full"><div>${mode1[0].toFixed(4)}</div><div>${mode1[1].toFixed(4)}</div></div>
-                        </div>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-emerald-100 border-t-4 border-t-emerald-500">
-                            <h3 class="font-bold text-xl mb-2 text-emerald-900">Mode 2 (Ungedämpft)</h3>
-                            <div class="mb-4">
-                                <p class="text-gray-600 flex justify-between"><span>Eigenkreisfreq. (&omega;n₂):</span> <span class="font-mono font-semibold">${w2.toFixed(3)} rad/s</span></p>
-                                <p class="text-gray-600 flex justify-between"><span>Eigenfrequenz (fn₂):</span> <span class="font-mono font-semibold">${f2.toFixed(3)} Hz</span></p>
-                            </div>
-                            <h4 class="text-xs font-semibold text-gray-500 mb-2">${normLabel} Eigenvektor &Phi;₂:</h4>
-                            <div class="matrix-input text-center font-mono bg-gray-50 p-2 rounded w-full"><div>${mode2[0].toFixed(4)}</div><div>${mode2[1].toFixed(4)}</div></div>
-                        </div>
-                    `;
-
-                    // Calculate Modal Matrices
-                    let PhiMat = math.matrix([[mode1[0], mode2[0]], [mode1[1], mode2[1]]]);
-                    let PhiT = math.transpose(PhiMat);
-                    let M_mat = math.matrix(M);
-                    let K_mat = math.matrix(K);
-                    
-                    let mu = math.multiply(math.multiply(PhiT, M_mat), PhiMat).toArray();
-                    let kappa = math.multiply(math.multiply(PhiT, K_mat), PhiMat).toArray();
-
-                    document.getElementById('modal-matrices-content').innerHTML = `
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2 text-center">Modale Masse &mu; = &Phi;<sup>T</sup> M &Phi;</h4>
-                            <div class="matrix-input text-center font-mono bg-white p-3 rounded shadow-sm w-full">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="${normType==='mass' && Math.abs(mu[0][0]-1)<1e-3 ? 'text-green-600 font-bold' : 'font-bold'}">${mu[0][0].toFixed(4)}</div>
-                                    <div class="${Math.abs(mu[0][1])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${mu[0][1].toFixed(4)}</div>
-                                    <div class="${Math.abs(mu[1][0])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${mu[1][0].toFixed(4)}</div>
-                                    <div class="${normType==='mass' && Math.abs(mu[1][1]-1)<1e-3 ? 'text-green-600 font-bold' : 'font-bold'}">${mu[1][1].toFixed(4)}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2 text-center">Modale Steifigkeit &kappa; = &Phi;<sup>T</sup> K &Phi;</h4>
-                            <div class="matrix-input text-center font-mono bg-white p-3 rounded shadow-sm w-full">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="font-bold ${normType==='mass' ? 'text-blue-600' : ''}">${kappa[0][0].toFixed(2)}</div>
-                                    <div class="${Math.abs(kappa[0][1])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${kappa[0][1].toFixed(2)}</div>
-                                    <div class="${Math.abs(kappa[1][0])<1e-3 ? 'text-gray-400' : 'text-red-500 font-bold'}">${kappa[1][0].toFixed(2)}</div>
-                                    <div class="font-bold ${normType==='mass' ? 'text-blue-600' : ''}">${kappa[1][1].toFixed(2)}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('modal-matrices-container').classList.remove('hidden');
-                }
-
-                let m11 = M[0][0], m12 = M[0][1], m21 = M[1][0], m22 = M[1][1];
-                let c11 = C[0][0], c12 = C[0][1], c21 = C[1][0], c22 = C[1][1];
-                let k11 = K[0][0], k12 = K[0][1], k21 = K[1][0], k22 = K[1][1];
-
-                let c4 = m11*m22 - m12*m21;
-                let c3 = (m11*c22 + c11*m22) - (m12*c21 + c12*m21);
-                let c2 = (m11*k22 + c11*c22 + k11*m22) - (m12*k21 + c12*c21 + k12*m21);
-                let c1 = (c11*k22 + k11*c22) - (c12*k21 + k12*c21);
-                let c0 = k11*k22 - k12*k21;
-
-                complexRoots = findRootsQuartic(c4, c3, c2, c1, c0);
-            }
-            
-            document.getElementById('modal-results').innerHTML = htmlContent;
-            
-            if (complexRoots && complexRoots.length > 0) {
-                let rootsHtml = '';
-                let skip = [];
-                let modeIndex = 1;
-                for(let i=0; i<complexRoots.length; i++) {
-                    if(skip.includes(i)) continue;
-                    let r = complexRoots[i];
-                    let isPaired = false;
-                    for(let j=i+1; j<complexRoots.length; j++) {
-                        if(!skip.includes(j) && Math.abs(r.re - complexRoots[j].re) < 1e-5 && Math.abs(r.im + complexRoots[j].im) < 1e-5 && r.im !== 0) {
-                            skip.push(j);
-                            isPaired = true;
-                            break;
-                        }
-                    }
-                    
-                    let formatCplx = (c) => {
-                        let reStr = c.re.toFixed(4);
-                        let imStr = Math.abs(c.im) < 1e-5 ? '' : (c.im > 0 ? ` + ${c.im.toFixed(4)}j` : ` - ${Math.abs(c.im).toFixed(4)}j`);
-                        return reStr + imStr;
-                    };
-
-                    let titleStr = isPaired ? `&lambda;<sub>${modeIndex},${modeIndex+1}</sub> = ${r.re.toFixed(4)} &plusmn; ${Math.abs(r.im).toFixed(4)}j` : `&lambda;<sub>${modeIndex}</sub> = ${formatCplx(r)}`;
-                    
-                    let evecHtml = '';
-                    if (sysDoF === 1) {
-                        const m = sys.M[0][0];
-                        let phi_val = normType === 'mass' ? 1 / Math.sqrt(m) : 1;
-                        evecHtml = `<div>${phi_val.toFixed(4)}</div>`;
-                    } else {
-                        let L = math.complex(r.re, r.im);
-                        let L2 = math.multiply(L, L);
-                        let M = sys.M; let C = sys.C; let K = sys.K;
-                        
-                        let D11 = math.add(math.add(math.multiply(L2, M[0][0]), math.multiply(L, C[0][0])), K[0][0]);
-                        let D12 = math.add(math.add(math.multiply(L2, M[0][1]), math.multiply(L, C[0][1])), K[0][1]);
-                        let D21 = math.add(math.add(math.multiply(L2, M[1][0]), math.multiply(L, C[1][0])), K[1][0]);
-                        let D22 = math.add(math.add(math.multiply(L2, M[1][1]), math.multiply(L, C[1][1])), K[1][1]);
-
-                        let phi2;
-                        if (math.abs(D12) > math.abs(D22)) {
-                            phi2 = math.multiply(math.complex(-1, 0), math.divide(D11, D12));
-                        } else {
-                            if (math.abs(D22) < 1e-10) phi2 = math.complex(0,0);
-                            else phi2 = math.multiply(math.complex(-1, 0), math.divide(D21, D22));
-                        }
-                        let phi1 = math.complex(1, 0);
-
-                        if (normType === 'unity') {
-                            if (math.abs(phi2) > math.abs(phi1)) {
-                                phi1 = math.divide(phi1, phi2);
-                                phi2 = math.complex(1, 0);
-                            }
-                        }
-
-                        if (normType === 'mass') {
-                            let row1 = math.add(math.multiply(M[0][0], phi1), math.multiply(M[0][1], phi2));
-                            let row2 = math.add(math.multiply(M[1][0], phi1), math.multiply(M[1][1], phi2));
-                            
-                            let m_r = math.add(math.multiply(phi1, row1), math.multiply(phi2, row2));
-                            let sqrt_m_r = math.sqrt(m_r);
-                            
-                            phi1 = math.divide(phi1, sqrt_m_r);
-                            phi2 = math.divide(phi2, sqrt_m_r);
-                        }
-
-                        if (math.abs(phi1.im) < 1e-5) phi1.im = 0;
-                        if (math.abs(phi2.im) < 1e-5) phi2.im = 0;
-
-                        evecHtml = `<div>${formatCplx(phi1)}</div><div>${formatCplx(phi2)}</div>`;
-                    }
-
-                    rootsHtml += `
-                        <div class="bg-blue-50 p-3 rounded border border-blue-100 font-mono text-sm text-center text-blue-800 shadow-sm flex flex-col items-center">
-                            <span class="font-bold mb-2">${titleStr}</span>
-                            <span class="text-xs text-gray-500 font-sans mb-1">${normLabel} ged. Eigenvektor &Psi;<sub>${modeIndex}</sub>:</span>
-                            <div class="matrix-input text-center bg-white p-1 rounded w-full">
-                                ${evecHtml}
-                            </div>
-                        </div>
-                    `;
-                    modeIndex += isPaired ? 2 : 1;
-                }
-                document.getElementById('eigenvalues-list').innerHTML = rootsHtml;
-                plotEigenvalues(complexRoots);
-            } else {
-                document.getElementById('eigenvalues-list').innerHTML = '';
-                if(eigenChartInst) eigenChartInst.destroy();
-            }
         }
 
         // --- Zeitbereich (Newmark-Beta) ---
         function runNewmark() {
             saveSystem();
-            let T = parseFloat(document.getElementById('t_end').value);
-            if (isNaN(T) || T <= 0) T = 5;
-            let dt = parseFloat(document.getElementById('dt').value);
-            if (isNaN(dt) || dt <= 0) dt = 0.01;
+            let T = parseFloat(document.getElementById('t_end').value); if (isNaN(T) || T <= 0) T = 5;
+            let dt = parseFloat(document.getElementById('dt').value); if (isNaN(dt) || dt <= 0) dt = 0.01;
             const N = Math.floor(T / dt);
             
             const exc_type = document.getElementById('exc_type').value;
-            let f1_amp = 0, w1 = 0, phase1_rad = 0, eps = 0, wp = 0;
-            let f2_amp = 0, w2 = 0, phase2_rad = 0;
-            let func1 = 'sin', func2 = 'sin';
-
-            if (exc_type === 'forced') {
-                f1_amp = parseFloat(document.getElementById('f1_amp').value) || 0;
-                func1 = document.getElementById('f1_func').value;
-                w1 = parseFloat(document.getElementById('f1_freq').value) || 0;
-                let phase_deg1 = parseFloat(document.getElementById('f1_phase').value) || 0;
-                phase1_rad = phase_deg1 * Math.PI / 180; 
-
-                if (sysDoF === 2) {
-                    f2_amp = parseFloat(document.getElementById('f2_amp').value) || 0;
-                    func2 = document.getElementById('f2_func').value;
-                    w2 = parseFloat(document.getElementById('f2_freq').value) || 0;
-                    let phase_deg2 = parseFloat(document.getElementById('f2_phase').value) || 0;
-                    phase2_rad = phase_deg2 * Math.PI / 180; 
-                }
-            } else if (exc_type === 'param') {
-                eps = parseFloat(document.getElementById('param_eps').value) || 0;
-                wp = parseFloat(document.getElementById('param_wp').value) || 0;
+            let F_amp = [], F_func = [], w_exc = [], phase_rad = [];
+            for(let i=1; i<=sysDoF; i++) {
+                let isActive = document.getElementById(`chk_f${i}_active`) ? document.getElementById(`chk_f${i}_active`).checked : true;
+                F_amp.push(isActive ? (parseFloat(document.getElementById(`f${i}_amp`).value) || 0) : 0);
+                F_func.push(document.getElementById(`f${i}_func`).value);
+                w_exc.push(parseFloat(document.getElementById(`f${i}_freq`).value) || 0);
+                phase_rad.push((parseFloat(document.getElementById(`f${i}_phase`).value) || 0) * Math.PI / 180);
             }
 
-            let x0_1 = parseFloat(document.getElementById('x0_1').value) || 0;
-            let x0_2 = parseFloat(document.getElementById('x0_2').value) || 0;
-            let v0_1 = parseFloat(document.getElementById('v0_1').value) || 0;
-            let v0_2 = parseFloat(document.getElementById('v0_2').value) || 0;
+            let eps = parseFloat(document.getElementById('param_eps').value) || 0;
+            let wp = parseFloat(document.getElementById('param_wp').value) || 0;
 
-            let x_tot = sysDoF === 1 ? [x0_1] : [x0_1, x0_2];
-            let v_tot = sysDoF === 1 ? [v0_1] : [v0_1, v0_2];
-            
-            let x_free = sysDoF === 1 ? [x0_1] : [x0_1, x0_2];
-            let v_free = sysDoF === 1 ? [v0_1] : [v0_1, v0_2];
+            let x_tot = [], v_tot = [], x_free = [], v_free = [];
+            for(let i=1; i<=sysDoF; i++) {
+                let x0 = parseFloat(document.getElementById(`x0_${i}`).value) || 0;
+                let v0 = parseFloat(document.getElementById(`v0_${i}`).value) || 0;
+                x_tot.push(x0); v_tot.push(v0); x_free.push(x0); v_free.push(v0);
+            }
 
-            const M = math.matrix(sys.M);
-            const C = math.matrix(sys.C);
-            const K = math.matrix(sys.K);
+            const M = math.matrix(sys.M); const C = math.matrix(sys.C); const K = math.matrix(sys.K);
 
-            let X1_amp_vec = sysDoF === 1 ? [math.complex(0,0)] : [math.complex(0,0), math.complex(0,0)];
-            let X2_amp_vec = sysDoF === 1 ? [math.complex(0,0)] : [math.complex(0,0), math.complex(0,0)];
+            let X_amp_vecs = [];
+            for(let i=0; i<sysDoF; i++) X_amp_vecs.push(new Array(sysDoF).fill(math.complex(0,0)));
 
             if (exc_type === 'forced') {
-                if (f1_amp !== 0) {
-                    let Z1 = math.add(K, math.multiply(-w1*w1, M));
-                    Z1 = math.add(Z1, math.multiply(math.complex(0, w1), C));
-                    let f1_cplx = math.complex(f1_amp * Math.cos(phase1_rad), f1_amp * Math.sin(phase1_rad));
-                    let F0_amp_vec1 = sysDoF === 1 ? [f1_cplx] : [f1_cplx, math.complex(0,0)];
-                    try {
-                        let X_amp1 = math.multiply(math.inv(Z1), F0_amp_vec1);
-                        X1_amp_vec = X_amp1.toArray ? X_amp1.toArray() : Array.from(X_amp1);
-                    } catch(e) {}
-                }
-
-                if (sysDoF === 2 && f2_amp !== 0) {
-                    let Z2 = math.add(K, math.multiply(-w2*w2, M));
-                    Z2 = math.add(Z2, math.multiply(math.complex(0, w2), C));
-                    let f2_cplx = math.complex(f2_amp * Math.cos(phase2_rad), f2_amp * Math.sin(phase2_rad));
-                    let F0_amp_vec2 = [math.complex(0,0), f2_cplx];
-                    try {
-                        let X_amp2 = math.multiply(math.inv(Z2), F0_amp_vec2);
-                        X2_amp_vec = X_amp2.toArray ? X_amp2.toArray() : Array.from(X_amp2);
-                    } catch(e) {}
-                }
-
-                let K_inv; try { K_inv = math.inv(K); } catch(e) { K_inv = math.matrix(sysDoF === 1 ? [[1]] : [[1,0],[0,1]]); }
-                let F_stat_vec = sysDoF === 1 ? [f1_amp] : [f1_amp, f2_amp];
-                let X_stat_vec = math.multiply(K_inv, F_stat_vec);
-                let X_stat_arr = X_stat_vec.toArray ? X_stat_vec.toArray() : Array.from(X_stat_vec);
-                
-                let x1_stat_val = math.abs(X_stat_arr[0]);
-                let x2_stat_val = sysDoF === 2 ? math.abs(X_stat_arr[1]) : 0;
-
-                let x1_amp_val = 0, x2_amp_val = 0;
-                if (sysDoF === 1) {
-                    x1_amp_val = math.abs(X1_amp_vec[0]);
-                } else {
-                    if (Math.abs(w1 - w2) < 1e-5) {
-                        x1_amp_val = math.abs(math.add(X1_amp_vec[0], X2_amp_vec[0]));
-                        x2_amp_val = math.abs(math.add(X1_amp_vec[1], X2_amp_vec[1]));
-                    } else {
-                        x1_amp_val = math.abs(X1_amp_vec[0]) + math.abs(X2_amp_vec[0]);
-                        x2_amp_val = math.abs(X1_amp_vec[1]) + math.abs(X2_amp_vec[1]);
+                for(let j=0; j<sysDoF; j++) {
+                    if (F_amp[j] !== 0) {
+                        let w = w_exc[j];
+                        let Z = math.add(K, math.multiply(-w*w, M)); Z = math.add(Z, math.multiply(math.complex(0, w), C));
+                        let f_cplx = math.complex(F_amp[j] * Math.cos(phase_rad[j]), F_amp[j] * Math.sin(phase_rad[j]));
+                        let F0_vec = new Array(sysDoF).fill(math.complex(0,0)); F0_vec[j] = f_cplx;
+                        try {
+                            let X_amp = math.multiply(math.inv(Z), F0_vec);
+                            X_amp_vecs[j] = X_amp.toArray ? X_amp.toArray() : Array.from(X_amp);
+                        } catch(e) {}
                     }
-                }
-                
-                let v_factor_val_1 = x1_stat_val > 1e-10 ? (x1_amp_val / x1_stat_val) : 0;
-                
-                const unitL1 = document.getElementById('type_dof1').value === 'trans' ? 'm' : 'rad';
-                const elStat1 = document.getElementById('val_x_stat_1');
-                const elDyn1 = document.getElementById('val_x_dyn_1');
-                const elV1 = document.getElementById('val_v_factor_1');
-                if (elStat1) elStat1.innerText = x1_stat_val.toFixed(4) + ' ' + unitL1;
-                if (elDyn1) elDyn1.innerText = x1_amp_val.toFixed(4) + ' ' + unitL1;
-                if (elV1) elV1.innerText = v_factor_val_1.toFixed(2);
-
-                if (sysDoF === 2) {
-                    let v_factor_val_2 = x2_stat_val > 1e-10 ? (x2_amp_val / x2_stat_val) : 0;
-                    const unitL2 = document.getElementById('type_dof2').value === 'trans' ? 'm' : 'rad';
-                    const elStat2 = document.getElementById('val_x_stat_2');
-                    const elDyn2 = document.getElementById('val_x_dyn_2');
-                    const elV2 = document.getElementById('val_v_factor_2');
-                    if (elStat2) elStat2.innerText = x2_stat_val.toFixed(4) + ' ' + unitL2;
-                    if (elDyn2) elDyn2.innerText = x2_amp_val.toFixed(4) + ' ' + unitL2;
-                    if (elV2) elV2.innerText = v_factor_val_2.toFixed(2);
                 }
             }
 
@@ -1599,145 +1264,88 @@
             const a4 = gamma / beta - 1; const a5 = (dt / 2) * (gamma / beta - 2);
             const a6 = dt * (1 - gamma); const a7 = gamma * dt;
 
-            let K_at_0 = K;
-            if (exc_type === 'param') K_at_0 = math.multiply(1 + eps * Math.cos(wp * 0), K);
-            
-            let force_at_0 = sysDoF === 1 ? [0] : [0, 0];
+            let force_at_0 = new Array(sysDoF).fill(0);
             if (exc_type === 'forced') {
-                let val1_0 = func1 === 'sin' ? Math.sin(phase1_rad) : Math.cos(phase1_rad);
-                let f1_0 = f1_amp * val1_0;
-                let f2_0 = 0;
-                if (sysDoF === 2) {
-                    let val2_0 = func2 === 'sin' ? Math.sin(phase2_rad) : Math.cos(phase2_rad);
-                    f2_0 = f2_amp * val2_0;
-                }
-                force_at_0 = sysDoF === 1 ? [f1_0] : [f1_0, f2_0];
+                for(let i=0; i<sysDoF; i++) force_at_0[i] = F_amp[i] * (F_func[i] === 'sin' ? Math.sin(phase_rad[i]) : Math.cos(phase_rad[i]));
             }
             
-            let cv_tot = math.multiply(C, v_tot);
-            let kx_tot = math.multiply(K_at_0, x_tot);
-            let rhs_tot = math.subtract(force_at_0, math.add(cv_tot, kx_tot));
-            let a_init_mat_tot = math.multiply(math.inv(M), rhs_tot);
-            let a_tot = a_init_mat_tot.toArray ? a_init_mat_tot.toArray() : Array.from(a_init_mat_tot);
+            let cv_tot = math.multiply(C, v_tot); let kx_tot = math.multiply(K, x_tot);
+            let a_tot = math.multiply(math.inv(M), math.subtract(force_at_0, math.add(cv_tot, kx_tot)));
+            a_tot = a_tot.toArray ? a_tot.toArray() : Array.from(a_tot);
 
-            let cv_free = math.multiply(C, v_free);
-            let kx_free = math.multiply(K_at_0, x_free);
-            let F_zero_0 = sysDoF === 1 ? [0] : [0, 0];
-            let rhs_free = math.subtract(F_zero_0, math.add(cv_free, kx_free));
-            let a_init_mat_free = math.multiply(math.inv(M), rhs_free);
-            let a_free = a_init_mat_free.toArray ? a_init_mat_free.toArray() : Array.from(a_init_mat_free);
+            let cv_free = math.multiply(C, v_free); let kx_free = math.multiply(K, x_free);
+            let a_free = math.multiply(math.inv(M), math.subtract(new Array(sysDoF).fill(0), math.add(cv_free, kx_free)));
+            a_free = a_free.toArray ? a_free.toArray() : Array.from(a_free);
 
-            let K_hat_LTI, K_hat_inv_LTI;
-            if (exc_type !== 'param') {
-                K_hat_LTI = math.add(K, math.multiply(a0, M));
-                K_hat_LTI = math.add(K_hat_LTI, math.multiply(a1, C));
-                K_hat_inv_LTI = math.inv(K_hat_LTI);
+            let K_hat_LTI = math.add(math.add(K, math.multiply(a0, M)), math.multiply(a1, C));
+            let K_hat_inv_LTI = math.inv(K_hat_LTI);
+
+            timeSimData = { t: [], f: [], x_tot: [], x_part: [], x_hom: [], x_forced: [], x_free: [] };
+            for(let i=0; i<sysDoF; i++) {
+                timeSimData.f.push([]); timeSimData.x_tot.push([]); timeSimData.x_part.push([]);
+                timeSimData.x_hom.push([]); timeSimData.x_forced.push([]); timeSimData.x_free.push([]);
             }
 
-            timeSimData = { t: [], f1: [], f2: [], x1_tot: [], x1_part: [], x1_hom: [], x1_forced: [], x1_free: [], x2_tot: [], x2_part: [], x2_hom: [], x2_forced: [], x2_free: [] };
-
-            for(let i=0; i<=N; i++) {
-                let t = i * dt;
+            for(let step=0; step<=N; step++) {
+                let t = step * dt;
                 timeSimData.t.push(t);
                 
-                let current_f1 = 0, current_f2 = 0;
+                let current_f = new Array(sysDoF).fill(0);
                 if (exc_type === 'forced') {
-                    current_f1 = func1 === 'sin' ? f1_amp * Math.sin(w1*t + phase1_rad) : f1_amp * Math.cos(w1*t + phase1_rad);
-                    if (sysDoF === 2) {
-                        current_f2 = func2 === 'sin' ? f2_amp * Math.sin(w2*t + phase2_rad) : f2_amp * Math.cos(w2*t + phase2_rad);
-                    }
+                    for(let i=0; i<sysDoF; i++) current_f[i] = F_amp[i] * (F_func[i] === 'sin' ? Math.sin(w_exc[i]*t + phase_rad[i]) : Math.cos(w_exc[i]*t + phase_rad[i]));
                 }
-                timeSimData.f1.push(current_f1);
-                if (sysDoF === 2) timeSimData.f2.push(current_f2);
+                for(let i=0; i<sysDoF; i++) timeSimData.f[i].push(current_f[i]);
 
-                let x1_total = x_tot[0]; let x2_total = sysDoF === 2 ? x_tot[1] : 0;
-                let x1_free_val = x_free[0]; let x2_free_val = sysDoF === 2 ? x_free[1] : 0;
-                
-                let x1_p = 0, x2_p = 0;
-                
+                let x_p = new Array(sysDoF).fill(0);
                 if (exc_type === 'forced') {
-                    let get_p = (X, w, func) => {
-                        if (!X) return 0;
-                        let re = X.re !== undefined ? X.re : X;
-                        let im = X.im !== undefined ? X.im : 0;
-                        if (func === 'sin') return re * Math.sin(w*t) + im * Math.cos(w*t);
-                        else return re * Math.cos(w*t) - im * Math.sin(w*t);
-                    };
-                    
-                    x1_p = get_p(X1_amp_vec[0], w1, func1);
-                    if (sysDoF === 2) {
-                        x1_p += get_p(X2_amp_vec[0], w2, func2);
-                        x2_p = get_p(X1_amp_vec[1], w1, func1) + get_p(X2_amp_vec[1], w2, func2);
+                    for(let i=0; i<sysDoF; i++) { 
+                        for(let j=0; j<sysDoF; j++) { 
+                            let X = X_amp_vecs[j][i];
+                            if(!X) continue;
+                            let re = X.re !== undefined ? X.re : X; let im = X.im !== undefined ? X.im : 0;
+                            if (F_func[j] === 'sin') x_p[i] += re * Math.sin(w_exc[j]*t) + im * Math.cos(w_exc[j]*t);
+                            else x_p[i] += re * Math.cos(w_exc[j]*t) - im * Math.sin(w_exc[j]*t);
+                        }
                     }
                 }
 
-                timeSimData.x1_tot.push(x1_total);
-                timeSimData.x1_part.push(x1_p);
-                timeSimData.x1_hom.push(x1_total - x1_p);
-                timeSimData.x1_forced.push(x1_total - x1_free_val);
-                timeSimData.x1_free.push(x1_free_val);
-
-                if(sysDoF === 2) {
-                    timeSimData.x2_tot.push(x2_total);
-                    timeSimData.x2_part.push(x2_p);
-                    timeSimData.x2_hom.push(x2_total - x2_p);
-                    timeSimData.x2_forced.push(x2_total - x2_free_val);
-                    timeSimData.x2_free.push(x2_free_val);
+                for(let i=0; i<sysDoF; i++) {
+                    timeSimData.x_tot[i].push(x_tot[i]);
+                    timeSimData.x_part[i].push(x_p[i]);
+                    timeSimData.x_hom[i].push(x_tot[i] - x_p[i]);
+                    timeSimData.x_forced[i].push(x_tot[i] - x_free[i]);
+                    timeSimData.x_free[i].push(x_free[i]);
                 }
 
                 let t_next = t + dt;
-                
-                let F_next = sysDoF === 1 ? [0] : [0, 0];
+                let F_next = new Array(sysDoF).fill(0);
                 if (exc_type === 'forced') {
-                    let val1_next = func1 === 'sin' ? Math.sin(w1 * t_next + phase1_rad) : Math.cos(w1 * t_next + phase1_rad);
-                    let f1_next = f1_amp * val1_next;
-                    let f2_next = 0;
-                    if (sysDoF === 2) {
-                        let val2_next = func2 === 'sin' ? Math.sin(w2 * t_next + phase2_rad) : Math.cos(w2 * t_next + phase2_rad);
-                        f2_next = f2_amp * val2_next;
-                    }
-                    F_next = sysDoF === 1 ? [f1_next] : [f1_next, f2_next];
+                    for(let i=0; i<sysDoF; i++) F_next[i] = F_amp[i] * (F_func[i] === 'sin' ? Math.sin(w_exc[i]*t_next + phase_rad[i]) : Math.cos(w_exc[i]*t_next + phase_rad[i]));
                 }
 
                 let K_hat_inv_current = K_hat_inv_LTI;
-
                 if (exc_type === 'param') {
                     let K_current = math.multiply(1 + eps * Math.cos(wp * t_next), K);
-                    let K_hat_new = math.add(K_current, math.multiply(a0, M));
-                    K_hat_new = math.add(K_hat_new, math.multiply(a1, C));
-                    K_hat_inv_current = math.inv(K_hat_new);
+                    K_hat_inv_current = math.inv(math.add(math.add(K_current, math.multiply(a0, M)), math.multiply(a1, C)));
                 }
 
                 let termM_tot = math.add(math.add(math.multiply(a0, x_tot), math.multiply(a2, v_tot)), math.multiply(a3, a_tot));
                 let termC_tot = math.add(math.add(math.multiply(a1, x_tot), math.multiply(a4, v_tot)), math.multiply(a5, a_tot));
-                
-                let F_hat_tot = math.add(F_next, math.multiply(M, termM_tot));
-                F_hat_tot = math.add(F_hat_tot, math.multiply(C, termC_tot));
+                let F_hat_tot = math.add(math.add(F_next, math.multiply(M, termM_tot)), math.multiply(C, termC_tot));
+                let x_next_tot = math.multiply(K_hat_inv_current, F_hat_tot);
+                x_next_tot = x_next_tot.toArray ? x_next_tot.toArray() : Array.from(x_next_tot);
 
-                let x_next_mat_tot = math.multiply(K_hat_inv_current, F_hat_tot);
-                let x_next_tot = x_next_mat_tot.toArray ? x_next_mat_tot.toArray() : Array.from(x_next_mat_tot);
-
-                let a_next_tot = math.subtract(math.multiply(a0, math.subtract(x_next_tot, x_tot)), math.multiply(a2, v_tot));
-                a_next_tot = math.subtract(a_next_tot, math.multiply(a3, a_tot));
-
-                let v_next_tot = math.add(v_tot, math.multiply(a6, a_tot));
-                v_next_tot = math.add(v_next_tot, math.multiply(a7, a_next_tot));
+                let a_next_tot = math.subtract(math.subtract(math.multiply(a0, math.subtract(x_next_tot, x_tot)), math.multiply(a2, v_tot)), math.multiply(a3, a_tot));
+                let v_next_tot = math.add(math.add(v_tot, math.multiply(a6, a_tot)), math.multiply(a7, a_next_tot));
 
                 let termM_free = math.add(math.add(math.multiply(a0, x_free), math.multiply(a2, v_free)), math.multiply(a3, a_free));
                 let termC_free = math.add(math.add(math.multiply(a1, x_free), math.multiply(a4, v_free)), math.multiply(a5, a_free));
-                
-                let F_zero = sysDoF === 1 ? [0] : [0, 0];
-                let F_hat_free = math.add(F_zero, math.multiply(M, termM_free));
-                F_hat_free = math.add(F_hat_free, math.multiply(C, termC_free));
+                let F_hat_free = math.add(math.add(new Array(sysDoF).fill(0), math.multiply(M, termM_free)), math.multiply(C, termC_free));
+                let x_next_free = math.multiply(K_hat_inv_current, F_hat_free);
+                x_next_free = x_next_free.toArray ? x_next_free.toArray() : Array.from(x_next_free);
 
-                let x_next_mat_free = math.multiply(K_hat_inv_current, F_hat_free);
-                let x_next_free = x_next_mat_free.toArray ? x_next_mat_free.toArray() : Array.from(x_next_mat_free);
-
-                let a_next_free = math.subtract(math.multiply(a0, math.subtract(x_next_free, x_free)), math.multiply(a2, v_free));
-                a_next_free = math.subtract(a_next_free, math.multiply(a3, a_free));
-
-                let v_next_free = math.add(v_free, math.multiply(a6, a_free));
-                v_next_free = math.add(v_next_free, math.multiply(a7, a_next_free));
+                let a_next_free = math.subtract(math.subtract(math.multiply(a0, math.subtract(x_next_free, x_free)), math.multiply(a2, v_free)), math.multiply(a3, a_free));
+                let v_next_free = math.add(math.add(v_free, math.multiply(a6, a_free)), math.multiply(a7, a_next_free));
 
                 x_tot = x_next_tot; v_tot = v_next_tot; a_tot = a_next_tot;
                 x_free = x_next_free; v_free = v_next_free; a_free = a_next_free;
@@ -1749,12 +1357,10 @@
 
         function updateTimePlot() {
             if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
-            
             const canvasEl = document.getElementById('timeChart');
             if (!canvasEl) return; 
 
             const exc_type = document.getElementById('exc_type').value;
-
             let showTot = document.getElementById('chk_tot').checked;
             let showPart = document.getElementById('chk_part').checked;
             let showHom = document.getElementById('chk_hom').checked;
@@ -1762,39 +1368,27 @@
             let showFree = document.getElementById('chk_free').checked;
             let showForce = document.getElementById('chk_force').checked;
 
-            if (exc_type !== 'forced') { 
-                showPart = false; showHom = false; showForced = false; showFree = false; showForce = false;
-            } 
+            if (exc_type !== 'forced') { showPart = false; showHom = false; showForced = false; showFree = false; showForce = false; } 
 
             const ctx = canvasEl.getContext('2d');
             if(timeChartInst) timeChartInst.destroy();
 
             let datasets = [];
+            const colors = ['#2563eb', '#059669', '#dc2626'];
+            const forceColors = ['rgba(129, 140, 248, 0.2)', 'rgba(52, 211, 153, 0.2)', 'rgba(248, 113, 113, 0.2)'];
+            const forceBorder = ['#818cf8', '#34d399', '#f87171'];
 
-            const lbl1 = document.getElementById('type_dof1').value === 'trans' ? 'x₁(t)' : 'φ₁(t)';
-            const lbl2 = sysDoF === 2 && document.getElementById('type_dof2').value === 'trans' ? 'x₂(t)' : 'φ₂(t)';
-
-            if (showTot) datasets.push({ label: `${lbl1} Gesamt`, data: timeSimData.x1_tot, borderColor: '#2563eb', tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            if (showForced) datasets.push({ label: `${lbl1} Erzwungen (IC=0)`, data: timeSimData.x1_forced, borderColor: '#f97316', borderDash: [5, 5], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            if (showFree) datasets.push({ label: `${lbl1} IC-Antwort (F=0)`, data: timeSimData.x1_free, borderColor: '#0d9488', borderDash: [2, 2], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            if (showPart) datasets.push({ label: `${lbl1} Partikulär (Stationär)`, data: timeSimData.x1_part, borderColor: '#dc2626', borderDash: [8, 4], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            if (showHom) datasets.push({ label: `${lbl1} Homogen (Transient)`, data: timeSimData.x1_hom, borderColor: '#9333ea', borderDash: [4, 4], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-
-            if (sysDoF === 2) {
-                if (showTot) datasets.push({ label: `${lbl2} Gesamt`, data: timeSimData.x2_tot, borderColor: '#059669', tension: 0.1, pointRadius: 0, borderWidth: 2 });
-                if (showForced) datasets.push({ label: `${lbl2} Erzwungen (IC=0)`, data: timeSimData.x2_forced, borderColor: '#d97706', borderDash: [5, 5], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-                if (showFree) datasets.push({ label: `${lbl2} IC-Antwort (F=0)`, data: timeSimData.x2_free, borderColor: '#65a30d', borderDash: [2, 2], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-                if (showPart) datasets.push({ label: `${lbl2} Partikulär (Stationär)`, data: timeSimData.x2_part, borderColor: '#db2777', borderDash: [8, 4], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-                if (showHom) datasets.push({ label: `${lbl2} Homogen (Transient)`, data: timeSimData.x2_hom, borderColor: '#4f46e5', borderDash: [4, 4], tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            }
-
-            if (showForce) {
-                const forceLbl1 = document.getElementById('type_dof1').value === 'trans' ? 'Erregerkraft F₁(t) [N]' : 'Erregermoment M₁(t) [Nm]';
-                datasets.push({ label: forceLbl1, data: timeSimData.f1, borderColor: '#818cf8', borderDash: [2, 2], backgroundColor: 'rgba(129, 140, 248, 0.1)', fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
+            for(let i=0; i<sysDoF; i++) {
+                let lbl = `x${i+1}(t)`;
+                let c = colors[i];
+                if (showTot) datasets.push({ label: `${lbl} Gesamt`, data: timeSimData.x_tot[i], borderColor: c, tension: 0.1, pointRadius: 0, borderWidth: 2 });
+                if (showForced) datasets.push({ label: `${lbl} Erzwungen`, data: timeSimData.x_forced[i], borderColor: c, borderDash: [5, 5], tension: 0.1, pointRadius: 0, borderWidth: 1 });
+                if (showFree) datasets.push({ label: `${lbl} IC-Antwort`, data: timeSimData.x_free[i], borderColor: c, borderDash: [2, 2], tension: 0.1, pointRadius: 0, borderWidth: 1 });
+                if (showPart) datasets.push({ label: `${lbl} Partikulär`, data: timeSimData.x_part[i], borderColor: c, borderDash: [8, 4], tension: 0.1, pointRadius: 0, borderWidth: 1 });
+                if (showHom) datasets.push({ label: `${lbl} Homogen`, data: timeSimData.x_hom[i], borderColor: c, borderDash: [4, 4], tension: 0.1, pointRadius: 0, borderWidth: 1 });
                 
-                if (sysDoF === 2) {
-                    const forceLbl2 = document.getElementById('type_dof2').value === 'trans' ? 'Erregerkraft F₂(t) [N]' : 'Erregermoment M₂(t) [Nm]';
-                    datasets.push({ label: forceLbl2, data: timeSimData.f2, borderColor: '#34d399', borderDash: [2, 2], backgroundColor: 'rgba(52, 211, 153, 0.1)', fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
+                if (showForce) {
+                    datasets.push({ label: `Kraft F${i+1}(t)`, data: timeSimData.f[i], borderColor: forceBorder[i], borderDash: [2, 2], backgroundColor: forceColors[i], fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5, yAxisID: 'yForce' });
                 }
             }
 
@@ -1802,61 +1396,43 @@
                 type: 'line',
                 data: { labels: timeSimData.t.map(val => val.toFixed(2)), datasets: datasets },
                 options: {
-                    responsive: true,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { title: { display: true, text: 'Dynamische Systemantwort' }, legend: { position: 'bottom' } },
+                    responsive: true, interaction: { mode: 'index', intersect: false },
+                    plugins: { title: { display: false }, legend: { position: 'bottom' } },
                     scales: {
                         x: { title: { display: true, text: 'Zeit (s)' } },
-                        y: { title: { display: true, text: 'Auslenkung / Winkel' }, position: 'left' },
-                        yForce: { 
-                            title: { display: true, text: 'Kraft [N] / Moment [Nm]' }, 
-                            position: 'right', 
-                            display: showForce,
-                            grid: { drawOnChartArea: false } 
-                        }
+                        y: { title: { display: true, text: 'Auslenkung' }, position: 'left' },
+                        yForce: { title: { display: true, text: 'Erregerkraft' }, position: 'right', display: showForce, grid: { drawOnChartArea: false } }
                     }
                 }
             });
         }
 
         // --- Animations Logik ---
-        let animReqId = null;
-        let animIsPlaying = false;
-        let animTimeIndex = 0;
-        let lastFrameTime = 0;
-        let animScale = 1;
-        let animParams = {};
+        let animReqId = null; let animIsPlaying = false; let animTimeIndex = 0; let lastFrameTime = 0; let animScale = 1; let animParams = {};
 
         function initAnimation() {
             if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
             
-            stopAnimation();
-            const slider = document.getElementById('anim-slider');
-            slider.max = timeSimData.t.length - 1;
-            slider.value = 0;
-            document.getElementById('anim-time-max').innerText = timeSimData.t[timeSimData.t.length - 1].toFixed(2) + "s";
-            
+            // Build topological chain
             const K = sys.K; const C = sys.C;
-            if (sysDoF === 1) {
-                animParams = {
-                    k_left: K[0][0], c_left: C[0][0], k_mid: 0, c_mid: 0, k_right: 0, c_right: 0
-                };
-            } else {
-                let k_mid = -K[0][1]; let c_mid = -C[0][1];
-                animParams = {
-                    k_left: K[0][0] - k_mid, c_left: C[0][0] - c_mid,
-                    k_mid: k_mid, c_mid: c_mid,
-                    k_right: K[1][1] - k_mid, c_right: C[1][1] - c_mid
-                };
+            animParams.k = []; animParams.c = [];
+            animParams.k.push(K[0][0] - (sysDoF > 1 ? Math.abs(K[0][1]) : 0));
+            animParams.c.push(C[0][0] - (sysDoF > 1 ? Math.abs(C[0][1]) : 0));
+            for(let i=0; i<sysDoF-1; i++) {
+                animParams.k.push(Math.abs(K[i][i+1]));
+                animParams.c.push(Math.abs(C[i][i+1]));
             }
+            animParams.k.push(K[sysDoF-1][sysDoF-1] - (sysDoF > 1 ? Math.abs(K[sysDoF-2][sysDoF-1]) : 0));
+            animParams.c.push(C[sysDoF-1][sysDoF-1] - (sysDoF > 1 ? Math.abs(C[sysDoF-2][sysDoF-1]) : 0));
 
             let maxDisp = 0;
-            timeSimData.x1_tot.forEach(v => maxDisp = Math.max(maxDisp, Math.abs(v)));
-            if (sysDoF === 2) timeSimData.x2_tot.forEach(v => maxDisp = Math.max(maxDisp, Math.abs(v)));
-            
+            for(let i=0; i<sysDoF; i++) timeSimData.x_tot[i].forEach(v => maxDisp = Math.max(maxDisp, Math.abs(v)));
             animScale = maxDisp > 1e-8 ? 35.0 / maxDisp : 1; 
 
-            drawSystemFrame();
+            document.getElementById('anim-slider').max = timeSimData.t.length - 1;
+            document.getElementById('anim-time-max').innerText = timeSimData.t[timeSimData.t.length - 1].toFixed(2) + "s";
+            
+            stopAnimation(); // Safely draw the first frame now that params are set
         }
 
         function toggleAnimation() {
@@ -1869,19 +1445,14 @@
                 if (animTimeIndex >= timeSimData.t.length - 1) animTimeIndex = 0;
                 lastFrameTime = performance.now();
                 animReqId = requestAnimationFrame(animationLoop);
-            } else {
-                cancelAnimationFrame(animReqId);
-            }
+            } else cancelAnimationFrame(animReqId);
         }
 
         function stopAnimation() {
-            animIsPlaying = false;
-            animTimeIndex = 0;
-            document.getElementById('anim-play-icon').setAttribute('data-lucide', 'play');
-            lucide.createIcons();
+            animIsPlaying = false; animTimeIndex = 0;
+            document.getElementById('anim-play-icon').setAttribute('data-lucide', 'play'); lucide.createIcons();
             if(animReqId) cancelAnimationFrame(animReqId);
-            const slider = document.getElementById('anim-slider');
-            if (slider) slider.value = 0;
+            const slider = document.getElementById('anim-slider'); if (slider) slider.value = 0;
             if(timeSimData && timeSimData.t && timeSimData.t.length > 0) drawSystemFrame();
         }
 
@@ -1893,70 +1464,47 @@
 
         function animationLoop(timestamp) {
             if (!animIsPlaying || !timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
-
             const speed = parseFloat(document.getElementById('anim-speed').value) || 1;
             let dt_sim = timeSimData.t.length > 1 ? (timeSimData.t[1] - timeSimData.t[0]) : 0.01;
             if (isNaN(dt_sim) || dt_sim <= 0) dt_sim = 0.01;
             
             const dt_real = (timestamp - lastFrameTime) / 1000.0;
-            const steps = (dt_real * speed) / dt_sim;
-            
-            animTimeIndex += steps;
+            animTimeIndex += (dt_real * speed) / dt_sim;
             if (isNaN(animTimeIndex)) animTimeIndex = 0;
 
-            if (animTimeIndex >= timeSimData.t.length - 1) {
-                animTimeIndex = timeSimData.t.length - 1;
-                toggleAnimation(); 
-            }
-
-            document.getElementById('anim-slider').value = Math.floor(animTimeIndex);
-            drawSystemFrame();
-
+            if (animTimeIndex >= timeSimData.t.length - 1) { animTimeIndex = timeSimData.t.length - 1; toggleAnimation(); }
+            document.getElementById('anim-slider').value = Math.floor(animTimeIndex); drawSystemFrame();
             lastFrameTime = timestamp;
             if (animIsPlaying) animReqId = requestAnimationFrame(animationLoop);
         }
 
         function drawSystemFrame() {
             if (!timeSimData || !timeSimData.t || timeSimData.t.length === 0) return;
-            const canvas = document.getElementById('animCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            const yCenter = height / 2;
-            
+            if (!animParams || !animParams.k || !animParams.c) return; // Safety Guard
+
+            const canvas = document.getElementById('animCanvas'); if (!canvas) return;
+            const ctx = canvas.getContext('2d'); const width = canvas.width; const height = canvas.height; const yCenter = height / 2;
             ctx.clearRect(0, 0, width, height);
 
             let idx = Math.floor(animTimeIndex);
             if (isNaN(idx) || !isFinite(idx) || idx < 0) idx = 0;
             idx = Math.min(idx, timeSimData.t.length - 1);
 
-            let currentT = timeSimData.t[idx];
-            if (currentT === undefined) currentT = 0;
+            let currentT = timeSimData.t[idx]; if (currentT === undefined) currentT = 0;
             document.getElementById('anim-time-label').innerText = currentT.toFixed(2) + "s";
 
-            const type1 = document.getElementById('type_dof1').value;
-            const type2 = sysDoF === 2 ? document.getElementById('type_dof2').value : null;
-
-            let x1_val = timeSimData.x1_tot[idx] || 0;
-            let x2_val = (sysDoF === 2 && timeSimData.x2_tot) ? (timeSimData.x2_tot[idx] || 0) : 0;
+            const wallLeftX = 100; const wallRightX = 700;
+            let bases = [];
+            for(let i=0; i<sysDoF; i++) bases.push(wallLeftX + (wallRightX - wallLeftX) * (i + 1) / (sysDoF + 1));
             
-            let f1_val = (document.getElementById('chk_force').checked && timeSimData.f1) ? (timeSimData.f1[idx] || 0) : 0;
-            let f2_val = (document.getElementById('chk_force').checked && sysDoF === 2 && timeSimData.f2) ? (timeSimData.f2[idx] || 0) : 0;
-
-            const wallLeftX = 100;
-            const wallRightX = 700;
-            
-            let m1_baseX = sysDoF === 1 ? 400 : 300;
-            let m2_baseX = 500;
-
-            let p1_x = m1_baseX + (type1 === 'trans' ? x1_val * animScale : 0);
-            let p2_x = m2_baseX + (type2 === 'trans' ? x2_val * animScale : 0);
-            
-            let angle1 = type1 === 'rot' ? x1_val * animScale * (Math.PI/180) * 100 : 0; 
-            let angle2 = type2 === 'rot' ? x2_val * animScale * (Math.PI/180) * 100 : 0;
-
-            const boxW = 50, boxH = 50;
+            let pos = []; let forces = [];
+            let showF = document.getElementById('chk_force').checked;
+            for(let i=0; i<sysDoF; i++) {
+                let x_val = (timeSimData.x_tot && timeSimData.x_tot[i] && timeSimData.x_tot[i][idx] !== undefined) ? timeSimData.x_tot[i][idx] : 0;
+                pos.push(bases[i] + x_val * animScale);
+                let f_val = (timeSimData.f && timeSimData.f[i] && timeSimData.f[i][idx] !== undefined) ? timeSimData.f[i][idx] : 0;
+                forces.push(showF ? f_val : 0);
+            }
 
             const drawSpring = (xStart, xEnd, y, active) => {
                 if(Math.abs(active) < 1e-5) return;
@@ -1964,14 +1512,9 @@
                 const len = xEnd - xStart; const coils = 6; const step = len / coils;
                 ctx.moveTo(xStart, y);
                 for(let i=0; i<=coils; i++) {
-                    if(i===0) ctx.lineTo(xStart + step*0.2, y);
-                    else if(i===coils) ctx.lineTo(xEnd, y);
-                    else {
-                        ctx.lineTo(xStart + step*(i-0.5), y - 15);
-                        ctx.lineTo(xStart + step*i, y + 15);
-                    }
-                }
-                ctx.stroke();
+                    if(i===0) ctx.lineTo(xStart + step*0.2, y); else if(i===coils) ctx.lineTo(xEnd, y);
+                    else { ctx.lineTo(xStart + step*(i-0.5), y - 10); ctx.lineTo(xStart + step*i, y + 10); }
+                } ctx.stroke();
             };
 
             const drawDamper = (xStart, xEnd, y, active) => {
@@ -1979,370 +1522,212 @@
                 ctx.beginPath(); ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2;
                 const mid = xStart + (xEnd - xStart)/2;
                 ctx.moveTo(xStart, y); ctx.lineTo(mid - 15, y); 
-                ctx.moveTo(mid - 15, y - 10); ctx.lineTo(mid - 15, y + 10); 
-                ctx.lineTo(mid + 15, y + 10); 
-                ctx.moveTo(mid - 15, y - 10); ctx.lineTo(mid + 15, y - 10); 
-                ctx.moveTo(xEnd, y); ctx.lineTo(mid, y); 
-                ctx.moveTo(mid, y - 8); ctx.lineTo(mid, y + 8); 
-                ctx.stroke();
-            };
-
-            const drawTransMass = (x, y, label, forceVal) => {
-                ctx.fillStyle = '#1e293b'; ctx.fillRect(x - boxW/2, y - boxH/2, boxW, boxH);
-                ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(label, x, y);
-                if (Math.abs(forceVal) > 1e-5) {
-                    const dir = forceVal > 0 ? 1 : -1;
-                    ctx.beginPath(); ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
-                    ctx.moveTo(x, y - boxH/2 - 10); ctx.lineTo(x + dir*30, y - boxH/2 - 10);
-                    ctx.lineTo(x + dir*30 - dir*8, y - boxH/2 - 15);
-                    ctx.moveTo(x + dir*30, y - boxH/2 - 10); ctx.lineTo(x + dir*30 - dir*8, y - boxH/2 - 5);
-                    ctx.stroke();
-                }
-            };
-
-            const drawRotMass = (x, y, angle, label, forceVal) => {
-                ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.arc(x, y, 30, 0, 2*Math.PI); ctx.fill();
-                ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 4; ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 30*Math.cos(angle), y + 30*Math.sin(angle)); ctx.stroke();
-                ctx.fillStyle = '#1e293b'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(label, x, y - 45);
-                if (Math.abs(forceVal) > 1e-5) {
-                    const dir = forceVal > 0 ? 1 : -1;
-                    ctx.beginPath(); ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
-                    ctx.arc(x, y, 40, -Math.PI/4, -Math.PI/4 + dir*Math.PI/2, forceVal < 0);
-                    ctx.stroke();
-                }
+                ctx.moveTo(mid - 15, y - 8); ctx.lineTo(mid - 15, y + 8); 
+                ctx.lineTo(mid + 15, y + 8); ctx.moveTo(mid - 15, y - 8); ctx.lineTo(mid + 15, y - 8); 
+                ctx.moveTo(xEnd, y); ctx.lineTo(mid, y); ctx.moveTo(mid, y - 6); ctx.lineTo(mid, y + 6); ctx.stroke();
             };
 
             const drawWall = (x, y, isRight) => {
-                ctx.fillStyle = '#94a3b8'; ctx.fillRect(isRight ? x : x-10, y - 40, 10, 80);
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(isRight ? x : x-10, y - 30, 10, 60);
                 ctx.beginPath(); ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1;
-                for(let i=-40; i<40; i+=10) { ctx.moveTo(x, y+i); ctx.lineTo(isRight ? x+10 : x-10, y+i+10); }
-                ctx.stroke();
+                for(let i=-30; i<30; i+=10) { ctx.moveTo(x, y+i); ctx.lineTo(isRight ? x+10 : x-10, y+i+10); } ctx.stroke();
             };
 
-            if (animParams.k_left > 1e-5 || animParams.c_left > 1e-5) drawWall(wallLeftX, yCenter, false);
-            if (sysDoF === 2 && (animParams.k_right > 1e-5 || animParams.c_right > 1e-5)) drawWall(wallRightX, yCenter, true);
-            else if (sysDoF === 1 && (animParams.k_right > 1e-5 || animParams.c_right > 1e-5)) drawWall(wallRightX, yCenter, true); 
+            if (animParams.k[0] > 1e-5 || animParams.c[0] > 1e-5) drawWall(wallLeftX, yCenter, false);
+            if (animParams.k[sysDoF] > 1e-5 || animParams.c[sysDoF] > 1e-5) drawWall(wallRightX, yCenter, true);
 
-            if (animParams.k_left > 1e-5) drawSpring(wallLeftX, p1_x - (type1==='trans'?boxW/2:30), yCenter - 15, animParams.k_left);
-            if (animParams.c_left > 1e-5) drawDamper(wallLeftX, p1_x - (type1==='trans'?boxW/2:30), yCenter + 15, animParams.c_left);
-
-            if (sysDoF === 2) {
-                if (animParams.k_mid > 1e-5) drawSpring(p1_x + (type1==='trans'?boxW/2:30), p2_x - (type2==='trans'?boxW/2:30), yCenter - 15, animParams.k_mid);
-                if (animParams.c_mid > 1e-5) drawDamper(p1_x + (type1==='trans'?boxW/2:30), p2_x - (type2==='trans'?boxW/2:30), yCenter + 15, animParams.c_mid);
+            // Draw Connections
+            for(let i=0; i<=sysDoF; i++) {
+                let startX = i === 0 ? wallLeftX : pos[i-1] + 20;
+                let endX = i === sysDoF ? wallRightX : pos[i] - 20;
+                if(animParams.k[i] > 1e-5) drawSpring(startX, endX, yCenter - 15, animParams.k[i]);
+                if(animParams.c[i] > 1e-5) drawDamper(startX, endX, yCenter + 15, animParams.c[i]);
             }
 
-            if (sysDoF === 2) {
-                if (animParams.k_right > 1e-5) drawSpring(p2_x + (type2==='trans'?boxW/2:30), wallRightX, yCenter - 15, animParams.k_right);
-                if (animParams.c_right > 1e-5) drawDamper(p2_x + (type2==='trans'?boxW/2:30), wallRightX, yCenter + 15, animParams.c_right);
-            } else {
-                if (animParams.k_right > 1e-5) drawSpring(p1_x + (type1==='trans'?boxW/2:30), wallRightX, yCenter - 15, animParams.k_right);
-                if (animParams.c_right > 1e-5) drawDamper(p1_x + (type1==='trans'?boxW/2:30), wallRightX, yCenter + 15, animParams.c_right);
-            }
-
-            if (type1 === 'trans') drawTransMass(p1_x, yCenter, 'm₁', f1_val);
-            else drawRotMass(p1_x, yCenter, angle1, 'J₁', f1_val);
-
-            if (sysDoF === 2) {
-                if (type2 === 'trans') drawTransMass(p2_x, yCenter, 'm₂', f2_val);
-                else drawRotMass(p2_x, yCenter, angle2, 'J₂', f2_val);
+            // Draw Masses
+            for(let i=0; i<sysDoF; i++) {
+                let x = pos[i];
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(x - 20, yCenter - 20, 40, 40);
+                ctx.fillStyle = '#fff'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(`m${i+1}`, x, yCenter);
+                if (Math.abs(forces[i]) > 1e-5) {
+                    const dir = forces[i] > 0 ? 1 : -1;
+                    ctx.beginPath(); ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3;
+                    ctx.moveTo(x, yCenter - 30); ctx.lineTo(x + dir*25, yCenter - 30);
+                    ctx.lineTo(x + dir*25 - dir*8, yCenter - 35); ctx.moveTo(x + dir*25, yCenter - 30); ctx.lineTo(x + dir*25 - dir*8, yCenter - 25);
+                    ctx.stroke();
+                }
             }
         }
 
         // --- Frequenzbereich (FRF) ---
         function runFRF() {
             saveSystem();
-            let w_max = parseFloat(document.getElementById('w_max').value);
-            if (isNaN(w_max) || w_max <= 0) w_max = 30;
-            let dw = parseFloat(document.getElementById('dw').value);
-            if (isNaN(dw) || dw <= 0) dw = 0.1;
-            
+            let w_max = parseFloat(document.getElementById('w_max').value); if (isNaN(w_max) || w_max <= 0) w_max = 30;
+            let dw = parseFloat(document.getElementById('dw').value); if (isNaN(dw) || dw <= 0) dw = 0.1;
             const y_axis_type = document.getElementById('frf_y_axis').value;
             const frf_type = document.getElementById('frf_type').value; 
             
-            const M = math.matrix(sys.M);
-            const C_complex = math.multiply(math.complex(0, 1), math.matrix(sys.C));
-            const K = math.matrix(sys.K);
+            const M = math.matrix(sys.M); const C_complex = math.multiply(math.complex(0, 1), math.matrix(sys.C)); const K = math.matrix(sys.K);
 
-            let H_stat;
-            try { H_stat = math.inv(K); } catch(e) { H_stat = null; }
-            let h11_stat = H_stat ? math.abs(H_stat.get([0, 0])) : 1;
-            let h21_stat = (H_stat && sysDoF === 2) ? math.abs(H_stat.get([1, 0])) : 1;
-
-            let wArr = [], h11_y = [], h21_y = [], h11_ph = [], h21_ph = []; 
+            let H_stat; try { H_stat = math.inv(K); } catch(e) { H_stat = null; }
+            
+            let wArr = []; let h_y = []; let h_ph = [];
+            for(let i=0; i<sysDoF; i++) { h_y.push([]); h_ph.push([]); }
 
             for(let w=0.1; w<=w_max; w+=dw) {
                 wArr.push(w);
-                let Z = math.add(K, math.multiply(-w*w, M));
-                Z = math.add(Z, math.multiply(w, C_complex));
+                let Z = math.add(K, math.multiply(-w*w, M)); Z = math.add(Z, math.multiply(w, C_complex));
                 
-                try {
-                    let H = math.inv(Z);
-                    
-                    let val11 = H.get([0, 0]);
-                    
-                    if (frf_type === 'mobility') {
-                        val11 = math.multiply(val11, math.complex(0, w));
-                    } else if (frf_type === 'accelerance') {
-                        val11 = math.multiply(val11, -w*w);
-                    } else if (frf_type === 'transmissibility') {
-                        let Z_sup1 = math.complex(sys.K[0][0], w * sys.C[0][0]);
-                        val11 = math.multiply(val11, Z_sup1);
+                let H; try { H = math.inv(Z); } catch(e) { for(let i=0;i<sysDoF;i++){ h_y[i].push(null); h_ph[i].push(null); } continue; }
+                
+                for(let i=0; i<sysDoF; i++) {
+                    let val = H.get([i, 0]);
+                    if (frf_type === 'mobility') val = math.multiply(val, math.complex(0, w));
+                    else if (frf_type === 'accelerance') val = math.multiply(val, -w*w);
+                    else if (frf_type === 'transmissibility') {
+                        let Z_sup = math.complex(sys.K[i][i], w * sys.C[i][i]);
+                        val = math.multiply(val, Z_sup);
                     }
                     
-                    let abs11 = math.abs(val11);
-                    let ph11 = Math.atan2(val11.im || 0, val11.re || val11) * 180 / Math.PI;
+                    let abs_val = math.abs(val);
+                    let ph = Math.atan2(val.im || 0, val.re || val) * 180 / Math.PI;
                     
-                    if (y_axis_type === 'db') h11_y.push(20 * Math.log10(abs11));
-                    else if (y_axis_type === 'v') h11_y.push(abs11 / (h11_stat || 1));
-                    else h11_y.push(abs11);
-
-                    h11_ph.push(ph11);
-
-                    if (sysDoF === 2) { 
-                        let val21 = H.get([1, 0]);
-                        
-                        if (frf_type === 'mobility') {
-                            val21 = math.multiply(val21, math.complex(0, w));
-                        } else if (frf_type === 'accelerance') {
-                            val21 = math.multiply(val21, -w*w);
-                        } else if (frf_type === 'transmissibility') {
-                            let Z_sup2 = math.complex(sys.K[1][1], w * sys.C[1][1]);
-                            val21 = math.multiply(val21, Z_sup2);
-                        }
-                        
-                        let abs21 = math.abs(val21);
-                        let ph21 = Math.atan2(val21.im || 0, val21.re || val21) * 180 / Math.PI;
-                        
-                        if (y_axis_type === 'db') h21_y.push(20 * Math.log10(abs21));
-                        else if (y_axis_type === 'v') h21_y.push(abs21 / (h21_stat || 1));
-                        else h21_y.push(abs21);
-
-                        h21_ph.push(ph21); 
+                    if (y_axis_type === 'db') h_y[i].push(20 * Math.log10(abs_val));
+                    else if (y_axis_type === 'v') {
+                        let stat = H_stat ? math.abs(H_stat.get([i, 0])) : 1;
+                        h_y[i].push(abs_val / (stat || 1));
                     }
-                } catch(e) {
-                    h11_y.push(null); h11_ph.push(null);
-                    if (sysDoF === 2) { h21_y.push(null); h21_ph.push(null); }
+                    else h_y[i].push(abs_val);
+
+                    h_ph[i].push(ph);
                 }
             }
 
             function unwrapPhase(arr) {
-                let res = [];
-                if(arr.length === 0) return res;
-                let prev = arr[0];
-                res.push(prev);
+                let res = []; if(arr.length === 0) return res;
+                let prev = arr[0]; res.push(prev);
                 for(let i=1; i<arr.length; i++) {
                     if(arr[i] === null) { res.push(null); continue; }
                     let curr = arr[i];
-                    while(curr - prev > 180) curr -= 360;
-                    while(curr - prev < -180) curr += 360;
-                    res.push(curr);
-                    prev = curr;
-                }
-                return res;
+                    while(curr - prev > 180) curr -= 360; while(curr - prev < -180) curr += 360;
+                    res.push(curr); prev = curr;
+                } return res;
             }
 
-            h11_ph = unwrapPhase(h11_ph);
-            if(sysDoF === 2) h21_ph = unwrapPhase(h21_ph);
+            for(let i=0; i<sysDoF; i++) h_ph[i] = unwrapPhase(h_ph[i]);
 
-            plotFreqDomain(wArr, h11_y, h21_y, h11_ph, h21_ph, y_axis_type, frf_type);
+            plotFreqDomain(wArr, h_y, h_ph, y_axis_type, frf_type);
         }
 
-        function plotFreqDomain(w, h11_y, h21_y, h11_ph, h21_ph, type, frf_type) {
-            const canvasFreq = document.getElementById('freqChart');
-            const canvasPhase = document.getElementById('phaseChart');
+        function plotFreqDomain(w, h_y, h_ph, type, frf_type) {
+            const canvasFreq = document.getElementById('freqChart'); const canvasPhase = document.getElementById('phaseChart');
             if (!canvasFreq || !canvasPhase) return; 
 
-            const ctxFreq = canvasFreq.getContext('2d');
-            const ctxPhase = canvasPhase.getContext('2d');
-
-            if(freqChartInst) freqChartInst.destroy();
-            if(phaseChartInst) phaseChartInst.destroy();
+            if(freqChartInst) freqChartInst.destroy(); if(phaseChartInst) phaseChartInst.destroy();
 
             let yTitle = 'Amplitude';
-            let label11 = '|H₁₁| (Receptance)', label21 = '|H₂₁|';
-            
-            if (frf_type === 'mobility') { label11 = '|Y₁₁| (Mobility)'; label21 = '|Y₂₁|'; }
-            else if (frf_type === 'accelerance') { label11 = '|A₁₁| (Accelerance)'; label21 = '|A₂₁|'; }
-            else if (frf_type === 'transmissibility') { label11 = 'T_R,₁₁ (Transmissibility)'; label21 = 'T_R,₂₁'; }
+            let lblBase = 'H';
+            if (frf_type === 'mobility') lblBase = 'Y';
+            else if (frf_type === 'accelerance') lblBase = 'A';
+            else if (frf_type === 'transmissibility') lblBase = 'T_R,';
 
             if (type === 'db') yTitle = 'Amplitude (dB)';
-            else if (type === 'v') { yTitle = 'Vergrößerungsfaktor V'; label11 = 'V₁₁'; label21 = 'V₂₁'; }
-            else { yTitle = 'Amplitude (Absolut)'; }
+            else if (type === 'v') { yTitle = 'Vergrößerungsfaktor V'; lblBase = 'V'; }
+            else yTitle = 'Amplitude (Absolut)';
 
-            let datasetsMag = [{ label: label11, data: h11_y, borderColor: '#2563eb', tension: 0.1, pointRadius: 0 }];
-            if (sysDoF === 2) datasetsMag.push({ label: label21, data: h21_y, borderColor: '#059669', tension: 0.1, pointRadius: 0 });
+            let datasetsMag = []; let datasetsPhase = [];
+            const colors = ['#2563eb', '#059669', '#dc2626'];
+
+            for(let i=0; i<sysDoF; i++) {
+                datasetsMag.push({ label: `|${lblBase}${i+1}1|`, data: h_y[i], borderColor: colors[i], tension: 0.1, pointRadius: 0 });
+                datasetsPhase.push({ label: `Phase φ${i+1}1`, data: h_ph[i], borderColor: colors[i], borderDash: [2,2], tension: 0.1, pointRadius: 0 });
+            }
 
             const syncHover = (e, activeElements, targetChart) => {
                 if (!targetChart) return;
                 if (activeElements.length > 0) {
-                    const idx = activeElements[0].index;
-                    currentHoverIndexFRF = idx;
+                    const idx = activeElements[0].index; currentHoverIndexFRF = idx;
                     const targetEls = targetChart.data.datasets.map((_, i) => ({datasetIndex: i, index: idx}));
                     targetChart.setActiveElements(targetEls);
                     const meta = targetChart.getDatasetMeta(0);
-                    if (meta && meta.data[idx]) {
-                        targetChart.tooltip.setActiveElements(targetEls, {x: meta.data[idx].x, y: meta.data[idx].y});
-                    }
+                    if (meta && meta.data[idx]) targetChart.tooltip.setActiveElements(targetEls, {x: meta.data[idx].x, y: meta.data[idx].y});
                     targetChart.update();
                 } else {
-                    targetChart.setActiveElements([]);
-                    targetChart.tooltip.setActiveElements([], {x: 0, y: 0});
-                    targetChart.update();
+                    targetChart.setActiveElements([]); targetChart.tooltip.setActiveElements([], {x: 0, y: 0}); targetChart.update();
                 }
             };
 
             const syncLegendClick = (e, legendItem, legend, partnerChart) => {
-                const index = legendItem.datasetIndex;
-                const ci = legend.chart;
-                
-                if (ci.isDatasetVisible(index)) {
-                    ci.hide(index);
-                    partnerChart.hide(index);
-                } else {
-                    ci.show(index);
-                    partnerChart.show(index); 
-                }
-                
-                ci.update();
-                partnerChart.update();
+                const index = legendItem.datasetIndex; const ci = legend.chart;
+                if (ci.isDatasetVisible(index)) { ci.hide(index); partnerChart.hide(index); } else { ci.show(index); partnerChart.show(index); }
+                ci.update(); partnerChart.update();
             };
 
-            freqChartInst = new Chart(ctxFreq, {
-                type: 'line',
-                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsMag },
+            freqChartInst = new Chart(canvasFreq, {
+                type: 'line', data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsMag },
                 options: {
-                    responsive: true,
-                    interaction: { mode: 'index', intersect: false },
-                    onHover: (e, activeElements) => syncHover(e, activeElements, phaseChartInst), 
+                    responsive: true, interaction: { mode: 'index', intersect: false }, onHover: (e, act) => syncHover(e, act, phaseChartInst), 
                     plugins: { 
-                        title: { display: true, text: 'Amplitudengang' }, 
-                        tooltip: {
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    return 'ω = ' + tooltipItems[0].label + ' rad/s';
-                                }
-                            }
-                        },
-                        legend: { 
-                            position: 'top',
-                            onClick: function(e, legendItem, legend) {
-                                syncLegendClick(e, legendItem, legend, phaseChartInst);
-                            }
-                        } 
+                        title: { display: false }, 
+                        tooltip: { callbacks: { title: function(tItems) { return 'ω = ' + tItems[0].label + ' rad/s'; } } },
+                        legend: { position: 'top', onClick: function(e, item, leg) { syncLegendClick(e, item, leg, phaseChartInst); } } 
                     },
-                    scales: {
-                        x: { display: false }, 
-                        y: { title: { display: true, text: yTitle } }
-                    }
+                    scales: { x: { display: false }, y: { title: { display: true, text: yTitle } } }
                 }
             });
 
-            let datasetsPhase = [{ label: 'Phase φ₁₁', data: h11_ph, borderColor: '#2563eb', borderDash: [2,2], tension: 0.1, pointRadius: 0 }];
-            if (sysDoF === 2) datasetsPhase.push({ label: 'Phase φ₂₁', data: h21_ph, borderColor: '#059669', borderDash: [2,2], tension: 0.1, pointRadius: 0 });
-
-            phaseChartInst = new Chart(ctxPhase, {
-                type: 'line',
-                data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsPhase },
+            phaseChartInst = new Chart(canvasPhase, {
+                type: 'line', data: { labels: w.map(val => val.toFixed(3)), datasets: datasetsPhase },
                 options: {
-                    responsive: true,
-                    interaction: { mode: 'index', intersect: false },
-                    onHover: (e, activeElements) => syncHover(e, activeElements, freqChartInst), 
+                    responsive: true, interaction: { mode: 'index', intersect: false }, onHover: (e, act) => syncHover(e, act, freqChartInst), 
                     plugins: { 
-                        title: { display: false }, 
-                        tooltip: {
-                            callbacks: {
-                                title: function(tooltipItems) {
-                                    return 'ω = ' + tooltipItems[0].label + ' rad/s';
-                                }
-                            }
-                        },
-                        legend: { 
-                            display: true, 
-                            position: 'bottom',
-                            onClick: function(e, legendItem, legend) {
-                                syncLegendClick(e, legendItem, legend, freqChartInst);
-                            }
-                        } 
+                        title: { display: false }, tooltip: { callbacks: { title: function(tItems) { return 'ω = ' + tItems[0].label + ' rad/s'; } } },
+                        legend: { display: true, position: 'bottom', onClick: function(e, item, leg) { syncLegendClick(e, item, leg, freqChartInst); } } 
                     },
-                    scales: {
-                        x: { 
-                            title: { display: true, text: 'Kreisfrequenz ω (rad/s)' },
-                            ticks: {
-                                callback: function(value, index, ticks) {
-                                    return Number(this.getLabelForValue(value)).toFixed(1);
-                                }
-                            }
-                        },
-                        y: { title: { display: true, text: 'Phasenwinkel φ (°)' } }
-                    }
+                    scales: { x: { title: { display: true, text: 'Kreisfrequenz ω (rad/s)' }, ticks: { callback: function(val) { return Number(this.getLabelForValue(val)).toFixed(1); } } }, y: { title: { display: true, text: 'Phasenwinkel φ (°)' } } }
                 }
             });
         }
 
-        // --- NEU: Schwingungstilger (Absorber) Logik ---
+        // --- Schwingungstilger (Absorber) Logik ---
         function runAbsorber() {
             let mu = parseFloat(document.getElementById('abs_mu').value);
             let beta = parseFloat(document.getElementById('abs_beta').value);
             let z2 = parseFloat(document.getElementById('abs_z2').value);
             let z1 = parseFloat(document.getElementById('abs_z1').value);
 
-            document.getElementById('lbl_abs_mu').innerText = mu.toFixed(3);
-            document.getElementById('lbl_abs_beta').innerText = beta.toFixed(3);
-            document.getElementById('lbl_abs_z2').innerText = z2.toFixed(3);
-            document.getElementById('lbl_abs_z1').innerText = z1.toFixed(3);
+            document.getElementById('abs_mu_num').value = mu.toFixed(3);
+            document.getElementById('abs_beta_num').value = beta.toFixed(3);
+            document.getElementById('abs_z2_num').value = z2.toFixed(3);
+            document.getElementById('abs_z1_num').value = z1.toFixed(3);
 
             const showX2 = document.getElementById('chk_abs_x2').checked;
 
-            let lamArr = [];
-            let v1Arr = [];
-            let v2Arr = [];
-            let vRefArr = [];
-
-            for(let lam=0; lam<=2.5; lam+=0.01) {
+            let lamArr = [], v1Arr = [], v2Arr = [], vRefArr = [];
+            
+            for(let lam=0; lam<=2.5; lam+=0.002) {
                 lamArr.push(lam);
 
-                // Referenz: Nur Hauptsystem ohne Tilger
                 let ref_mag = 1.0 / Math.sqrt(Math.pow(1 - lam*lam, 2) + Math.pow(2*z1*lam, 2));
                 vRefArr.push(ref_mag);
 
-                // Z-Matrix Elemente für M1=1, K1=1, w1=1
-                let Z11_re = 1 + mu*beta*beta - lam*lam;
-                let Z11_im = 2*z1*lam + 2*z2*mu*beta*lam;
+                let Z11_re = 1 + mu*beta*beta - lam*lam; let Z11_im = 2*z1*lam + 2*z2*mu*beta*lam;
+                let Z12_re = -mu*beta*beta; let Z12_im = -2*z2*mu*beta*lam;
+                let Z22_re = mu*beta*beta - mu*lam*lam; let Z22_im = 2*z2*mu*beta*lam;
 
-                let Z12_re = -mu*beta*beta;
-                let Z12_im = -2*z2*mu*beta*lam;
-
-                let Z22_re = mu*beta*beta - mu*lam*lam;
-                let Z22_im = 2*z2*mu*beta*lam;
-
-                let det_re = Z11_re*Z22_re - Z11_im*Z22_im;
-                let det_im = Z11_re*Z22_im + Z11_im*Z22_re;
-
-                let z12_sq_re = Z12_re*Z12_re - Z12_im*Z12_im;
-                let z12_sq_im = 2*Z12_re*Z12_im;
-
-                det_re -= z12_sq_re;
-                det_im -= z12_sq_im;
-
+                let det_re = Z11_re*Z22_re - Z11_im*Z22_im - (Z12_re*Z12_re - Z12_im*Z12_im);
+                let det_im = Z11_re*Z22_im + Z11_im*Z22_re - (2*Z12_re*Z12_im);
                 let det_mag2 = det_re*det_re + det_im*det_im;
 
-                if (det_mag2 < 1e-12) {
-                    v1Arr.push(null); v2Arr.push(null); continue;
-                }
+                if (det_mag2 < 1e-12) { v1Arr.push(null); v2Arr.push(null); continue; }
 
                 let z22_mag = Math.sqrt(Z22_re*Z22_re + Z22_im*Z22_im);
-                let x1_mag = z22_mag / Math.sqrt(det_mag2);
-                v1Arr.push(x1_mag);
+                v1Arr.push(z22_mag / Math.sqrt(det_mag2));
 
                 if (showX2) {
-                    let neg_z12_re = -Z12_re;
-                    let neg_z12_im = -Z12_im;
-                    let z12_mag = Math.sqrt(neg_z12_re*neg_z12_re + neg_z12_im*neg_z12_im);
-                    let x2_mag = z12_mag / Math.sqrt(det_mag2);
-                    v2Arr.push(x2_mag);
+                    let z12_mag = Math.sqrt((-Z12_re)*(-Z12_re) + (-Z12_im)*(-Z12_im));
+                    v2Arr.push(z12_mag / Math.sqrt(det_mag2));
                 }
             }
 
@@ -2350,10 +1735,8 @@
         }
 
         function plotAbsorber(lamArr, v1Arr, vRefArr, v2Arr) {
-            const canvasEl = document.getElementById('absorberChart');
-            if (!canvasEl) return;
+            const canvasEl = document.getElementById('absorberChart'); if (!canvasEl) return;
             const ctx = canvasEl.getContext('2d');
-            
             if(absorberChartInst) absorberChartInst.destroy();
 
             let datasets = [
@@ -2361,44 +1744,22 @@
                 { label: 'Ohne Tilger (Ref.)', data: vRefArr, borderColor: '#94a3b8', borderDash: [5,5], tension: 0.1, pointRadius: 0, borderWidth: 2 }
             ];
 
-            if (v2Arr) {
-                datasets.push({ label: 'Tilgermasse (V₂)', data: v2Arr, borderColor: '#10b981', tension: 0.1, pointRadius: 0, borderWidth: 2 });
-            }
+            if (v2Arr) datasets.push({ label: 'Tilgermasse (V₂)', data: v2Arr, borderColor: '#10b981', tension: 0.1, pointRadius: 0, borderWidth: 2 });
 
-            // Dynamische Y-Achsen Skalierung auf V1 anpassen
             let maxV1 = 0;
-            v1Arr.forEach(v => {
-                // Extrem hohe Peaks filtern, damit wir das Plateau/die Täler gut sehen
-                if (v !== null && isFinite(v) && v < 100) {
-                    maxV1 = Math.max(maxV1, v);
-                }
-            });
-            
-            // Puffer von 15% hinzufügen, aber zwischen 5 und 25 kappen, 
-            // damit die unendlichen Resonanzspitzen die Darstellung nicht zerstören
+            v1Arr.forEach(v => { if (v !== null && isFinite(v) && v < 100) maxV1 = Math.max(maxV1, v); });
             let yMax = maxV1 * 1.15;
-            if (yMax < 5) yMax = 5;
-            if (yMax > 25) yMax = 25;
+            if (yMax < 5) yMax = 5; if (yMax > 25) yMax = 25;
 
             absorberChartInst = new Chart(ctx, {
                 type: 'line',
-                data: { labels: lamArr.map(val => val.toFixed(2)), datasets: datasets },
+                data: { labels: lamArr.map(val => val.toFixed(3)), datasets: datasets },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { 
-                        title: { display: false },
-                        tooltip: { callbacks: { title: function(tooltipItems) { return 'λ = ' + tooltipItems[0].label; } } },
-                        legend: { position: 'bottom' }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Frequenzverhältnis λ = ω / ω₁' } },
-                        y: { 
-                            title: { display: true, text: 'Vergrößerungsfaktor V' }, 
-                            min: 0,
-                            max: yMax // Hier das berechnete Maximum anwenden
-                        }
+                    responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                    plugins: { title: { display: false }, tooltip: { callbacks: { title: function(tItems) { return 'λ = ' + tItems[0].label; } } }, legend: { position: 'bottom' } },
+                    scales: { 
+                        x: { title: { display: true, text: 'Frequenzverhältnis λ = ω / ω₁' }, ticks: { callback: function(val) { return Number(this.getLabelForValue(val)).toFixed(1); } } }, 
+                        y: { title: { display: true, text: 'Vergrößerungsfaktor V' }, min: 0, max: yMax } 
                     }
                 }
             });
@@ -2406,65 +1767,41 @@
 
         function applyDenHartog() {
             const mu = parseFloat(document.getElementById('abs_mu').value);
-            // Den-Hartog Optimale Auslegung (für ungedämpftes Hauptsystem z1=0 abgeleitet, gilt aber als bester Kompromiss)
             const beta = 1.0 / (1.0 + mu);
             const z2 = Math.sqrt((3.0 * mu) / (8.0 * Math.pow(1.0 + mu, 3)));
             
             document.getElementById('abs_beta').value = beta;
             document.getElementById('abs_z2').value = z2;
-            
-            // Standardmäßig Hauptsystemdämpfung auf 0 setzen für reine akademische Darstellung
             document.getElementById('abs_z1').value = 0; 
 
-            runAbsorber();
-            showToast("Den-Hartog Parameter angewendet!");
+            runAbsorber(); showToast("Den-Hartog Parameter angewendet!");
         }
 
         function transferAbsorberToMain() {
-            // Skaliert auf das aktuelle 200 N/m Basis-System im Tab 1
-            const m1 = 1.0;
-            const k1 = 200.0;
-            const w1 = Math.sqrt(k1/m1); 
-
+            const m1 = 1.0; const k1 = 200.0; const w1 = Math.sqrt(k1/m1); 
             const mu = parseFloat(document.getElementById('abs_mu').value);
             const beta = parseFloat(document.getElementById('abs_beta').value);
             const z2 = parseFloat(document.getElementById('abs_z2').value);
             const z1 = parseFloat(document.getElementById('abs_z1').value);
 
-            const m2 = mu * m1;
-            const w2 = beta * w1;
-            const k2 = m2 * w2 * w2;
-            
-            const c1 = 2 * z1 * m1 * w1;
-            const c2 = 2 * z2 * m2 * w2;
-
-            document.getElementById('m11').value = m1.toFixed(4);
-            document.getElementById('m22').value = m2.toFixed(4);
-            document.getElementById('m12').value = 0;
-            document.getElementById('m21').value = 0;
-
-            document.getElementById('k11').value = (k1 + k2).toFixed(4);
-            document.getElementById('k22').value = k2.toFixed(4);
-            document.getElementById('k12').value = (-k2).toFixed(4);
-            document.getElementById('k21').value = (-k2).toFixed(4);
-
-            document.getElementById('damping-type').value = 'matrix';
-            toggleDampingType();
-
-            document.getElementById('c11').value = (c1 + c2).toFixed(4);
-            document.getElementById('c22').value = c2.toFixed(4);
-            document.getElementById('c12').value = (-c2).toFixed(4);
-            document.getElementById('c21').value = (-c2).toFixed(4);
+            const m2 = mu * m1; const w2 = beta * w1; const k2 = m2 * w2 * w2;
+            const c1 = 2 * z1 * m1 * w1; const c2 = 2 * z2 * m2 * w2;
 
             setDoF(2);
-            saveSystem();
-            switchTab('freq');
-            showToast("Tilger in 2-DoF Matrizen konvertiert!");
+            document.getElementById('m11').value = m1.toFixed(4); document.getElementById('m22').value = m2.toFixed(4);
+            document.getElementById('m12').value = 0; document.getElementById('m21').value = 0;
+            document.getElementById('k11').value = (k1 + k2).toFixed(4); document.getElementById('k22').value = k2.toFixed(4);
+            document.getElementById('k12').value = (-k2).toFixed(4); document.getElementById('k21').value = (-k2).toFixed(4);
+
+            document.getElementById('damping-type').value = 'matrix'; toggleDampingType();
+            document.getElementById('c11').value = (c1 + c2).toFixed(4); document.getElementById('c22').value = c2.toFixed(4);
+            document.getElementById('c12').value = (-c2).toFixed(4); document.getElementById('c21').value = (-c2).toFixed(4);
+
+            saveSystem(); switchTab('freq'); showToast("Tilger in 2-DoF Matrizen geladen!");
         }
         
         // Init
         toggleDampingType();
-        toggleExcitationUI();
         initPresets(); 
     </script>
 </body>
